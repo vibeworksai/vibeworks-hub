@@ -101,9 +101,9 @@ export default function ContactsPage() {
               <span className="font-semibold text-white">{contacts.length}</span>
             </div>
             <div>
-              <span className="text-slate-400">With Active Deals:</span>{" "}
+              <span className="text-slate-400">Total Companies:</span>{" "}
               <span className="font-semibold text-white">
-                {contacts.filter((c) => c.dealId).length}
+                {new Set(contacts.map((c) => c.company)).size}
               </span>
             </div>
           </div>
@@ -185,14 +185,6 @@ export default function ContactsPage() {
                   <h3 className="text-lg font-semibold text-white">{contact.name}</h3>
                   <p className="text-sm text-cyan-300">{contact.company}</p>
                 </div>
-                {contact.dealId && (
-                  <Link
-                    href="/pipeline"
-                    className="rounded-full bg-emerald-400/20 px-3 py-1 text-xs font-medium text-emerald-300"
-                  >
-                    Active Deal
-                  </Link>
-                )}
               </div>
 
               <div className="mt-4 space-y-2 text-sm">
