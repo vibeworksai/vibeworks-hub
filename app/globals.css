@@ -1,0 +1,78 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+  --vw-bg-0: #05070d;
+  --vw-bg-1: #0a0f1a;
+  --vw-surface: rgba(13, 18, 30, 0.62);
+  --vw-surface-strong: rgba(17, 23, 37, 0.78);
+  --vw-border: rgba(255, 255, 255, 0.14);
+  --vw-border-soft: rgba(255, 255, 255, 0.08);
+  --vw-text-primary: #f4f7ff;
+  --vw-text-secondary: #a9b4cc;
+  --vw-accent: #3ec8ff;
+  --vw-accent-strong: #1d9dff;
+  --vw-shadow: 0 18px 55px rgba(0, 0, 0, 0.45);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  min-height: 100vh;
+  color: var(--vw-text-primary);
+  font-family: Inter, "SF Pro Text", "Segoe UI", -apple-system, BlinkMacSystemFont,
+    "Helvetica Neue", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--vw-bg-0);
+  background-image:
+    radial-gradient(circle at 12% -2%, rgba(62, 200, 255, 0.2) 0%, transparent 36%),
+    radial-gradient(circle at 84% 6%, rgba(29, 157, 255, 0.14) 0%, transparent 34%),
+    linear-gradient(170deg, var(--vw-bg-1) 0%, var(--vw-bg-0) 52%, #04060b 100%);
+  background-attachment: fixed;
+}
+
+::selection {
+  color: #05111b;
+  background: rgba(62, 200, 255, 0.86);
+}
+
+@layer components {
+  .glass-card {
+    background: linear-gradient(
+      145deg,
+      rgba(255, 255, 255, 0.12) 0%,
+      rgba(255, 255, 255, 0.04) 100%
+    );
+    background-color: var(--vw-surface);
+    border: 1px solid var(--vw-border);
+    box-shadow: var(--vw-shadow);
+    backdrop-filter: blur(16px) saturate(135%);
+    -webkit-backdrop-filter: blur(16px) saturate(135%);
+    border-radius: 18px;
+  }
+
+  .glass-panel {
+    background-color: var(--vw-surface-strong);
+    border: 1px solid var(--vw-border-soft);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), var(--vw-shadow);
+    backdrop-filter: blur(22px) saturate(140%);
+    -webkit-backdrop-filter: blur(22px) saturate(140%);
+    border-radius: 22px;
+  }
+
+  .accent-ring {
+    border: 1px solid rgba(62, 200, 255, 0.44);
+    box-shadow: 0 0 0 1px rgba(62, 200, 255, 0.1), 0 14px 32px rgba(29, 157, 255, 0.2);
+  }
+}
