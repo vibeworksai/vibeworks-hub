@@ -1,166 +1,201 @@
 import { NextResponse } from "next/server";
-import { supabase, isSupabaseConfigured } from "@/lib/supabase";
+import { sql, isDatabaseConfigured } from "@/lib/db";
 
-// Mock data fallback (used if Supabase not configured)
+// Mock data fallback (used if DATABASE_URL not configured)
 const mockProjects = [
   {
     id: "supreme-copy-trader",
     name: "Supreme Copy Trader",
-    slug: "supreme-copy-trader",
     status: "On Track",
     progress: 100,
     description: "Complete copy trading platform for Supreme Financial",
-    last_updated: new Date().toISOString()
+    updated_at: new Date().toISOString()
   },
   {
     id: "trading-bot-v18",
     name: "Trading Bot v18",
-    slug: "trading-bot-v18",
     status: "On Track",
     progress: 95,
     description: "Automated trading bot - running and monitoring",
-    last_updated: new Date().toISOString()
+    updated_at: new Date().toISOString()
   },
   {
     id: "sports-betting-engine",
     name: "Sports Betting Engine",
-    slug: "sports-betting-engine",
     status: "On Track",
     progress: 85,
     description: "Running with daily retraining",
-    last_updated: new Date().toISOString()
+    updated_at: new Date().toISOString()
   },
   {
     id: "vibeworks-hub",
     name: "VibeWorks Hub",
-    slug: "vibeworks-hub",
     status: "On Track",
     progress: 80,
-    description: "This project - needs Supabase integration",
-    last_updated: new Date().toISOString()
+    description: "This project - database connected!",
+    updated_at: new Date().toISOString()
   },
   {
     id: "live-voice-farrah",
     name: "Live Voice Farrah",
-    slug: "live-voice-farrah",
     status: "Caution",
     progress: 35,
     description: "Research complete, prototype next",
-    last_updated: new Date().toISOString()
+    updated_at: new Date().toISOString()
   },
   {
     id: "mac-mini-dual-gateway",
     name: "Mac Mini Dual Gateway",
-    slug: "mac-mini-dual-gateway",
     status: "At Risk",
     progress: 20,
     description: "Planning phase",
-    last_updated: new Date().toISOString()
+    updated_at: new Date().toISOString()
   },
   {
     id: "instagram-dm-automation",
     name: "Instagram DM Automation",
-    slug: "instagram-dm-automation",
     status: "Caution",
     progress: 15,
     description: "Paused - waiting on Meta credentials",
-    last_updated: new Date().toISOString()
+    updated_at: new Date().toISOString()
   }
 ];
 
 export async function GET() {
-  if (!isSupabaseConfigured()) {
+  if (!isDatabaseConfigured() || !sql) {
     return NextResponse.json({ projects: mockProjects });
   }
 
-  const { data, error } = await supabase
-    .from("projects")
-    .select("*")
-    .order("progress", { ascending: false });
-
-  if (error) {
-    console.error("Supabase error:", error);
+  try {
+    const projects = await sql`
+      SELECT * FROM projects ORDER BY progress DESC
+    `;
+    
+    return NextResponse.json({ projects });
+  } catch (error) {
+    console.error("Database error:", error);
     return NextResponse.json({ projects: mockProjects });
   }
-
-  return NextResponse.json({ projects: data || [] });
 }
 
 export async function POST(request: Request) {
   const body = await request.json();
 
-  if (!isSupabaseConfigured()) {
+  if (!isDatabaseConfigured() || !sql) {
     return NextResponse.json({ 
       success: true, 
-      message: "Mock: Project created (Supabase not configured)", 
+      message: "Mock: Project created (Database not configured)", 
       data: { id: Date.now().toString(), ...body }
     });
   }
 
-  const project = {
-    id: body.id || `project-${Date.now()}`,
-    name: body.name,
-    slug: body.slug || body.name.toLowerCase().replace(/\s+/g, "-"),
-    status: body.status || "On Track",
-    progress: body.progress || 0,
-    description: body.description || "",
-    last_updated: new Date().toISOString()
-  };
+  try {
+    const project = {
+      id: body.id || `project-${Date.now()}`,
+      name: body.name,
+      status: body.status || "On Track",
+      progress: body.progress || 0,
+      description: body.description || "",
+      tech: body.tech || [],
+      updated_at: new Date().toISOString()
+    };
 
-  const { data, error } = await supabase
-    .from("projects")
-    .insert(project)
-    .select()
-    .single();
+    const result = await sql`
+      INSERT INTO projects (id, name, status, progress, description, tech, updated_at)
+      VALUES (${project.id}, ${project.name}, ${project.status}, ${project.progress}, ${project.description}, ${project.tech}, ${project.updated_at})
+      RETURNING *
+    `;
 
-  if (error) {
+    // Log activity
+    await sql`
+      INSERT INTO activity_feed (id, user, action, target, timestamp)
+      VALUES (${`activity-${Date.now()}`}, ${"Farrah"}, ${"created"}, ${`project: ${project.name}`}, ${new Date().toISOString()})
+    `;
+
+    return NextResponse.json({ success: true, message: "Project created", data: result[0] });
+  } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message }, { status: 400 });
   }
-
-  // Log activity
-  await supabase.from("activity_feed").insert({
-    user_name: "Farrah",
-    action: `Created project: ${project.name}`,
-    entity_type: "project",
-    entity_id: project.id
-  });
-
-  return NextResponse.json({ success: true, message: "Project created", data });
 }
 
 export async function PATCH(request: Request) {
   const body = await request.json();
 
-  if (!isSupabaseConfigured()) {
+  if (!isDatabaseConfigured() || !sql) {
     return NextResponse.json({ 
       success: true, 
-      message: "Mock: Project updated (Supabase not configured)", 
+      message: "Mock: Project updated (Database not configured)", 
       data: body 
     });
   }
 
-  const { id, ...updates } = body;
-  updates.last_updated = new Date().toISOString();
+  try {
+    const { id, ...updates } = body;
+    const updated_at = new Date().toISOString();
 
-  const { data, error } = await supabase
-    .from("projects")
-    .update(updates)
-    .eq("id", id)
-    .select()
-    .single();
+    const result = await sql`
+      UPDATE projects 
+      SET 
+        name = COALESCE(${updates.name}, name),
+        status = COALESCE(${updates.status}, status),
+        progress = COALESCE(${updates.progress}, progress),
+        description = COALESCE(${updates.description}, description),
+        tech = COALESCE(${updates.tech}, tech),
+        updated_at = ${updated_at}
+      WHERE id = ${id}
+      RETURNING *
+    `;
 
-  if (error) {
+    if (result.length === 0) {
+      return NextResponse.json({ success: false, error: "Project not found" }, { status: 404 });
+    }
+
+    // Log activity
+    const changes = Object.keys(updates).join(", ");
+    await sql`
+      INSERT INTO activity_feed (id, user, action, target, timestamp)
+      VALUES (${`activity-${Date.now()}`}, ${"Farrah"}, ${"updated"}, ${`project: ${result[0].name} (${changes})`}, ${new Date().toISOString()})
+    `;
+
+    return NextResponse.json({ success: true, message: "Project updated", data: result[0] });
+  } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message }, { status: 400 });
   }
+}
 
-  // Log activity
-  const changes = Object.keys(updates).filter(k => k !== "last_updated").join(", ");
-  await supabase.from("activity_feed").insert({
-    user_name: "Farrah",
-    action: `Updated project: ${data.name} (${changes})`,
-    entity_type: "project",
-    entity_id: id
-  });
+export async function DELETE(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const id = searchParams.get("id");
 
-  return NextResponse.json({ success: true, message: "Project updated", data });
+  if (!id) {
+    return NextResponse.json({ success: false, error: "ID required" }, { status: 400 });
+  }
+
+  if (!isDatabaseConfigured() || !sql) {
+    return NextResponse.json({ 
+      success: true, 
+      message: "Mock: Project deleted (Database not configured)" 
+    });
+  }
+
+  try {
+    const result = await sql`
+      DELETE FROM projects WHERE id = ${id}
+      RETURNING name
+    `;
+
+    if (result.length === 0) {
+      return NextResponse.json({ success: false, error: "Project not found" }, { status: 404 });
+    }
+
+    // Log activity
+    await sql`
+      INSERT INTO activity_feed (id, user, action, target, timestamp)
+      VALUES (${`activity-${Date.now()}`}, ${"Farrah"}, ${"deleted"}, ${`project: ${result[0].name}`}, ${new Date().toISOString()})
+    `;
+
+    return NextResponse.json({ success: true, message: "Project deleted" });
+  } catch (error: any) {
+    return NextResponse.json({ success: false, error: error.message }, { status: 400 });
+  }
 }

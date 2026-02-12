@@ -1,80 +1,78 @@
 import { NextResponse } from "next/server";
-import { supabase, isSupabaseConfigured } from "@/lib/supabase";
+import { sql, isDatabaseConfigured } from "@/lib/db";
 
 // Mock data fallback
 const mockActivity = [
   {
-    id: 1,
-    user_name: "Farrah",
-    action: "Updated Supreme Copy Trader to 100%",
-    entity_type: "project",
-    entity_id: "supreme-copy-trader",
+    id: "1",
+    user: "Farrah",
+    action: "updated",
+    target: "project: Supreme Copy Trader to 100%",
     timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
   },
   {
-    id: 2,
-    user_name: "Fero",
-    action: "Built VibeWorks Hub CRM system",
-    entity_type: "project",
-    entity_id: "vibeworks-hub",
+    id: "2",
+    user: "Fero",
+    action: "built",
+    target: "project: VibeWorks Hub CRM system",
     timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString()
   },
   {
-    id: 3,
-    user_name: "Farrah",
-    action: "Added contact: Jameel (Supreme Financial)",
-    entity_type: "contact",
-    entity_id: "1",
+    id: "3",
+    user: "Farrah",
+    action: "created",
+    target: "contact: Jameel (Supreme Financial)",
     timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString()
   }
 ];
 
 export async function GET() {
-  if (!isSupabaseConfigured()) {
+  if (!isDatabaseConfigured() || !sql) {
     return NextResponse.json({ activity: mockActivity });
   }
 
-  const { data, error } = await supabase
-    .from("activity_feed")
-    .select("*")
-    .order("timestamp", { ascending: false })
-    .limit(50);
-
-  if (error) {
-    console.error("Supabase error:", error);
+  try {
+    const activity = await sql`
+      SELECT * FROM activity_feed 
+      ORDER BY timestamp DESC 
+      LIMIT 50
+    `;
+    
+    return NextResponse.json({ activity });
+  } catch (error) {
+    console.error("Database error:", error);
     return NextResponse.json({ activity: mockActivity });
   }
-
-  return NextResponse.json({ activity: data || [] });
 }
 
 export async function POST(request: Request) {
   const body = await request.json();
 
-  if (!isSupabaseConfigured()) {
+  if (!isDatabaseConfigured() || !sql) {
     return NextResponse.json({ 
       success: true, 
       message: "Mock: Activity logged", 
-      data: { id: Date.now(), ...body }
+      data: { id: Date.now().toString(), ...body }
     });
   }
 
-  const activity = {
-    user_name: body.user_name || "System",
-    action: body.action,
-    entity_type: body.entity_type || null,
-    entity_id: body.entity_id || null
-  };
+  try {
+    const activity = {
+      id: `activity-${Date.now()}`,
+      user: body.user || "System",
+      action: body.action,
+      target: body.target,
+      timestamp: new Date().toISOString()
+    };
 
-  const { data, error } = await supabase
-    .from("activity_feed")
-    .insert(activity)
-    .select()
-    .single();
+    const result = await sql`
+      INSERT INTO activity_feed (id, user, action, target, timestamp)
+      VALUES (${activity.id}, ${activity.user}, ${activity.action}, ${activity.target}, ${activity.timestamp})
+      RETURNING *
+    `;
 
-  if (error) {
+    return NextResponse.json({ success: true, message: "Activity logged", data: result[0] });
+  } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message }, { status: 400 });
   }
-
-  return NextResponse.json({ success: true, message: "Activity logged", data });
 }
