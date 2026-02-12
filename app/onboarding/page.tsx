@@ -95,11 +95,15 @@ export default function OnboardingPage() {
         throw new Error("Failed to mark onboarding as complete");
       }
       
-      console.log("Onboarding marked complete, navigating to dashboard...");
+      console.log("Onboarding marked complete, setting completion cookie...");
       
-      // Force a complete page navigation with reload
-      // This will cause NextAuth to re-check the session from database
-      window.location.replace("/");
+      // Set a completion flag cookie that middleware can check
+      document.cookie = "onboarding_just_completed=true; path=/; max-age=60";
+      
+      console.log("Navigating to dashboard...");
+      
+      // Navigate to dashboard with completion flag
+      window.location.href = "/?just_completed=true";
     } catch (error) {
       console.error("Completion error:", error);
       alert("Error completing onboarding. Please try again.");

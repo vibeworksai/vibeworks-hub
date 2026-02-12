@@ -21,14 +21,37 @@ export default auth((req) => {
     return NextResponse.redirect(loginUrl);
   }
 
+  // Check for onboarding completion bypass cookie (set immediately after completion)
+  const justCompletedCookie = req.cookies.get("onboarding_just_completed");
+  const justCompletedParam = req.nextUrl.searchParams.get("just_completed");
+  
   // If authenticated but onboarding not complete, redirect to onboarding
-  // (unless already on onboarding route)
+  // (unless already on onboarding route OR just completed)
   if (
     req.auth &&
     !req.auth.user.onboardingComplete &&
-    !isOnboardingRoute
+    !isOnboardingRoute &&
+    !justCompletedCookie &&
+    !justCompletedParam
   ) {
     return NextResponse.redirect(new URL("/onboarding", req.url));
+  }
+
+  // If just completed, clear the completion cookie and update response
+  if (justCompletedCookie || justCompletedParam) {
+    const response = NextResponse.next();
+    
+    // Clear the temporary cookie
+    response.cookies.delete("onboarding_just_completed");
+    
+    // Remove the query parameter for cleaner URL
+    if (justCompletedParam) {
+      const url = req.nextUrl.clone();
+      url.searchParams.delete("just_completed");
+      return NextResponse.redirect(url);
+    }
+    
+    return response;
   }
 
   return NextResponse.next();
