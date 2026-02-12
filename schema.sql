@@ -40,7 +40,7 @@ CREATE TABLE IF NOT EXISTS contacts (
 -- Activity feed table
 CREATE TABLE IF NOT EXISTS activity_feed (
   id TEXT PRIMARY KEY,
-  user TEXT NOT NULL,
+  username TEXT NOT NULL,
   action TEXT NOT NULL,
   target TEXT NOT NULL,
   timestamp TIMESTAMP DEFAULT NOW()

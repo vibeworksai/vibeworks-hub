@@ -5,21 +5,21 @@ import { sql, isDatabaseConfigured } from "@/lib/db";
 const mockActivity = [
   {
     id: "1",
-    user: "Farrah",
+    username: "Farrah",
     action: "updated",
     target: "project: Supreme Copy Trader to 100%",
     timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
   },
   {
     id: "2",
-    user: "Fero",
+    username: "Fero",
     action: "built",
     target: "project: VibeWorks Hub CRM system",
     timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString()
   },
   {
     id: "3",
-    user: "Farrah",
+    username: "Farrah",
     action: "created",
     target: "contact: Jameel (Supreme Financial)",
     timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString()
@@ -59,15 +59,15 @@ export async function POST(request: Request) {
   try {
     const activity = {
       id: `activity-${Date.now()}`,
-      user: body.user || "System",
+      username: body.username || "System",
       action: body.action,
       target: body.target,
       timestamp: new Date().toISOString()
     };
 
     const result = await sql`
-      INSERT INTO activity_feed (id, user, action, target, timestamp)
-      VALUES (${activity.id}, ${activity.user}, ${activity.action}, ${activity.target}, ${activity.timestamp})
+      INSERT INTO activity_feed (id, username, action, target, timestamp)
+      VALUES (${activity.id}, ${activity.username}, ${activity.action}, ${activity.target}, ${activity.timestamp})
       RETURNING *
     `;
 

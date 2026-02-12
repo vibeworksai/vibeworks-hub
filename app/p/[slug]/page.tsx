@@ -14,7 +14,7 @@ type Milestone = {
 };
 
 type ActivityItem = {
-  user: string;
+  username: string;
   action: string;
   timestamp: string;
 };
@@ -53,10 +53,10 @@ const projectsData: Record<string, Project> = {
       { title: "Contract signed", date: "Feb 25, 2026", completed: false }
     ],
     activity: [
-      { user: "Farrah", action: "Completed trading bot integration tests", timestamp: "12 min ago" },
-      { user: "Ivanlee", action: "Sent proposal to Jameel (Supreme Financial)", timestamp: "2 hours ago" },
-      { user: "Fero", action: "Updated dashboard mockups", timestamp: "5 hours ago" },
-      { user: "Farrah", action: "Deployed backend to staging", timestamp: "1 day ago" }
+      { username: "Farrah", action: "Completed trading bot integration tests", timestamp: "12 min ago" },
+      { username: "Ivanlee", action: "Sent proposal to Jameel (Supreme Financial)", timestamp: "2 hours ago" },
+      { username: "Fero", action: "Updated dashboard mockups", timestamp: "5 hours ago" },
+      { username: "Farrah", action: "Deployed backend to staging", timestamp: "1 day ago" }
     ],
     notes: [
       "Client interested in high-frequency trading capabilities",
@@ -83,8 +83,8 @@ const projectsData: Record<string, Project> = {
       { title: "MVP testing", date: "Feb 20, 2026", completed: false }
     ],
     activity: [
-      { user: "Farrah", action: "Waiting on Meta app approval", timestamp: "34 min ago" },
-      { user: "Natasha", action: "Drafted initial response templates", timestamp: "2 days ago" }
+      { username: "Farrah", action: "Waiting on Meta app approval", timestamp: "34 min ago" },
+      { username: "Natasha", action: "Drafted initial response templates", timestamp: "2 days ago" }
     ],
     notes: [
       "Meta app review taking longer than expected",
@@ -198,7 +198,7 @@ export default async function ProjectPage({
                 {project.activity.map((item, idx) => (
                   <li key={idx} className="border-l-2 border-cyan-300/30 pl-4">
                     <p className="text-sm text-white">
-                      <span className="font-semibold text-cyan-200">{item.user}</span> {item.action}
+                      <span className="font-semibold text-cyan-200">{item.username}</span> {item.action}
                     </p>
                     <p className="mt-1 text-xs text-slate-400">{item.timestamp}</p>
                   </li>
