@@ -29,8 +29,13 @@ export default function LoginPage() {
         setError("Invalid username or password");
         setLoading(false);
       } else {
-        router.push("/");
-        router.refresh();
+        console.log("Sign in successful, navigating to dashboard...");
+        
+        // Small delay to ensure session cookie is set
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // Use window.location for reliable navigation on mobile
+        window.location.href = "/";
       }
     } catch (err) {
       setError("An error occurred. Please try again.");
