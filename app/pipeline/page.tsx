@@ -2,6 +2,7 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
+import { DealProbabilityIndicator } from "../components/DealProbabilityIndicator";
 
 type RawDealStage =
   | "Lead"
@@ -330,6 +331,13 @@ export default function PipelinePage() {
                                             <span className="text-slate-400">Notes:</span> {deal.notes}
                                           </p>
                                         )}
+                                        
+                                        {/* Deal Closing Probability */}
+                                        <DealProbabilityIndicator
+                                          dealId={deal.id}
+                                          dealValue={deal.value || 0}
+                                          dealStage={deal.pipelineStage}
+                                        />
                                         
                                         {/* Stage Controls */}
                                         <div className="mt-3 border-t border-white/10 pt-3">

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { MysticalCommandCenter } from "./components/MysticalCommandCenter";
+import { EnhancedMysticalInsights } from "./components/EnhancedMysticalInsights";
 
 type ProjectStatus = "On Track" | "Caution" | "At Risk";
 
@@ -114,9 +115,16 @@ export default function HomePage() {
 
         {/* Mystical Command Center - Personalized Dashboard */}
         {session?.user && (
-          <div className="mt-6 sm:mt-7">
-            <MysticalCommandCenter />
-          </div>
+          <>
+            <div className="mt-6 sm:mt-7">
+              <MysticalCommandCenter />
+            </div>
+            
+            {/* Enhanced Mystical Insights - Moon, Tarot, Business Timing */}
+            <div className="mt-6 sm:mt-7">
+              <EnhancedMysticalInsights />
+            </div>
+          </>
         )}
 
         {loading ? (
