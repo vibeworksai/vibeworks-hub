@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 
 type Contact = {
@@ -8,40 +8,30 @@ type Contact = {
   name: string;
   company: string;
   email: string;
-  phone: string;
+  phone: string | null;
   tags: string[];
-  lastContact: string;
   notes: string;
-  dealId?: string;
+  created_at: string;
+  updated_at: string;
 };
 
-const initialContacts: Contact[] = [
-  {
-    id: "1",
-    name: "Jameel",
-    company: "Supreme Financial",
-    email: "jameel@supremefinancial.com",
-    phone: "+1-555-0123",
-    tags: ["High Value", "Copy Trading"],
-    lastContact: "2 hours ago",
-    notes: "Primary contact for $36K copy trading platform proposal",
-    dealId: "1"
-  },
-  {
-    id: "2",
-    name: "Management Team",
-    company: "Alabama Barker",
-    email: "contact@alabamabarker.com",
-    phone: "",
-    tags: ["Celebrity", "High Profile"],
-    lastContact: "3 days ago",
-    notes: "Celebrity proposal filed - awaiting response",
-    dealId: "2"
-  }
-];
+function getTimeAgo(timestamp: string): string {
+  const now = new Date();
+  const then = new Date(timestamp);
+  const diffMs = now.getTime() - then.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMins / 60);
+  const diffDays = Math.floor(diffHours / 24);
+
+  if (diffMins < 1) return "just now";
+  if (diffMins < 60) return `${diffMins} minute${diffMins === 1 ? "" : "s"} ago`;
+  if (diffHours < 24) return `${diffHours} hour${diffHours === 1 ? "" : "s"} ago`;
+  return `${diffDays} day${diffDays === 1 ? "" : "s"} ago`;
+}
 
 export default function ContactsPage() {
-  const [contacts, setContacts] = useState<Contact[]>(initialContacts);
+  const [contacts, setContacts] = useState<Contact[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [showAddForm, setShowAddForm] = useState(false);
   const [newContact, setNewContact] = useState({
@@ -51,6 +41,24 @@ export default function ContactsPage() {
     phone: "",
     notes: ""
   });
+
+  const fetchContacts = async () => {
+    try {
+      const res = await fetch("/api/contacts", { cache: "no-store" });
+      const data = await res.json();
+      setContacts(data.contacts || []);
+      setLoading(false);
+    } catch (error) {
+      console.error("Failed to fetch contacts:", error);
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchContacts();
+    const interval = setInterval(fetchContacts, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   const filteredContacts = contacts.filter(
     (contact) =>
@@ -221,7 +229,7 @@ export default function ContactsPage() {
                 <p className="mt-3 text-xs text-slate-400">{contact.notes}</p>
               )}
 
-              <p className="mt-3 text-xs text-slate-500">Last contact: {contact.lastContact}</p>
+              <p className="mt-3 text-xs text-slate-500">Last contact: {getTimeAgo(contact.updated_at)}</p>
             </div>
           ))}
         </div>
