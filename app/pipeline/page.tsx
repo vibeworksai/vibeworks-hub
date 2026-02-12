@@ -1,55 +1,99 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { useEffect, useMemo, useState } from "react";
 
-type DealStage = "Lead" | "Qualified" | "Proposal Sent" | "Negotiation" | "Closed Won" | "Closed Lost";
+type RawDealStage =
+  | "Lead"
+  | "Qualified"
+  | "Proposal Sent"
+  | "Negotiation"
+  | "Closed Won"
+  | "Closed Lost"
+  | "Discovery"
+  | "Proposal"
+  | "On Hold";
+
+type PipelineStage =
+  | "Discovery"
+  | "Proposal"
+  | "Negotiation"
+  | "Closed Won"
+  | "Closed Lost"
+  | "On Hold";
 
 type Deal = {
   id: string;
   company: string;
   contact_id: string | null;
   value: number | null;
-  stage: DealStage;
+  stage: RawDealStage;
   notes: string;
   created_at: string;
   updated_at: string;
 };
 
-const stages: DealStage[] = [
-  "Lead",
-  "Qualified",
-  "Proposal Sent",
+const stages: PipelineStage[] = [
+  "Discovery",
+  "Proposal",
   "Negotiation",
   "Closed Won",
-  "Closed Lost"
+  "Closed Lost",
+  "On Hold"
 ];
 
-const stageColors: Record<DealStage, string> = {
-  "Lead": "border-slate-400/30 bg-slate-400/10",
-  "Qualified": "border-blue-400/30 bg-blue-400/10",
-  "Proposal Sent": "border-purple-400/30 bg-purple-400/10",
-  "Negotiation": "border-amber-400/30 bg-amber-400/10",
-  "Closed Won": "border-emerald-400/30 bg-emerald-400/10",
-  "Closed Lost": "border-rose-400/30 bg-rose-400/10"
+const stageLabelStyles: Record<PipelineStage, string> = {
+  Discovery: "bg-cyan-400/15 text-cyan-100 border-cyan-300/30",
+  Proposal: "bg-sky-400/15 text-sky-100 border-sky-300/30",
+  Negotiation: "bg-blue-400/15 text-blue-100 border-blue-300/30",
+  "Closed Won": "bg-emerald-400/15 text-emerald-100 border-emerald-300/30",
+  "Closed Lost": "bg-rose-400/15 text-rose-100 border-rose-300/30",
+  "On Hold": "bg-amber-400/15 text-amber-100 border-amber-300/30"
 };
 
-function getTimeAgo(timestamp: string): string {
-  const now = new Date();
-  const then = new Date(timestamp);
-  const diffMs = now.getTime() - then.getTime();
-  const diffMins = Math.floor(diffMs / 60000);
-  const diffHours = Math.floor(diffMins / 60);
-  const diffDays = Math.floor(diffHours / 24);
+const statusDotStyles: Record<PipelineStage, string> = {
+  Discovery: "bg-cyan-300",
+  Proposal: "bg-sky-300",
+  Negotiation: "bg-blue-300",
+  "Closed Won": "bg-emerald-300",
+  "Closed Lost": "bg-rose-300",
+  "On Hold": "bg-amber-300"
+};
 
-  if (diffMins < 1) return "just now";
-  if (diffMins < 60) return `${diffMins} minute${diffMins === 1 ? "" : "s"} ago`;
-  if (diffHours < 24) return `${diffHours} hour${diffHours === 1 ? "" : "s"} ago`;
-  return `${diffDays} day${diffDays === 1 ? "" : "s"} ago`;
+function normalizeStage(stage: RawDealStage): PipelineStage {
+  if (stage === "Lead" || stage === "Qualified") return "Discovery";
+  if (stage === "Proposal Sent") return "Proposal";
+  if (stages.includes(stage as PipelineStage)) return stage as PipelineStage;
+  return "On Hold";
+}
+
+function formatCurrency(value: number): string {
+  return value.toLocaleString("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 0
+  });
+}
+
+function getDaysInStage(updatedAt: string): number {
+  const now = new Date();
+  const then = new Date(updatedAt);
+  const diffMs = now.getTime() - then.getTime();
+  return Math.max(0, Math.floor(diffMs / (1000 * 60 * 60 * 24)));
 }
 
 export default function PipelinePage() {
   const [deals, setDeals] = useState<Deal[]>([]);
   const [loading, setLoading] = useState(true);
+  const [collapsedStages, setCollapsedStages] = useState<Record<PipelineStage, boolean>>({
+    Discovery: true,
+    Proposal: true,
+    Negotiation: true,
+    "Closed Won": true,
+    "Closed Lost": true,
+    "On Hold": true
+  });
+  const [expandedDealId, setExpandedDealId] = useState<string | null>(null);
 
   const fetchDeals = async () => {
     try {
@@ -69,96 +113,211 @@ export default function PipelinePage() {
     return () => clearInterval(interval);
   }, []);
 
-  const totalValue = deals.reduce((sum, deal) => sum + (deal.value || 0), 0);
+  const normalizedDeals = useMemo(
+    () => deals.map((deal) => ({ ...deal, pipelineStage: normalizeStage(deal.stage) })),
+    [deals]
+  );
+
+  const summary = useMemo(() => {
+    const totalDeals = normalizedDeals.length;
+    const totalValue = normalizedDeals.reduce((sum, deal) => sum + (deal.value || 0), 0);
+    const won = normalizedDeals.filter((deal) => deal.pipelineStage === "Closed Won").length;
+    const lost = normalizedDeals.filter((deal) => deal.pipelineStage === "Closed Lost").length;
+    const winRate = won + lost > 0 ? (won / (won + lost)) * 100 : 0;
+
+    return {
+      totalDeals,
+      totalValue,
+      winRate
+    };
+  }, [normalizedDeals]);
+
+  const groupedDeals = useMemo(
+    () =>
+      stages.reduce(
+        (acc, stage) => {
+          acc[stage] = normalizedDeals.filter((deal) => deal.pipelineStage === stage);
+          return acc;
+        },
+        {} as Record<PipelineStage, (Deal & { pipelineStage: PipelineStage })[]>
+      ),
+    [normalizedDeals]
+  );
+
+  const toggleStage = (stage: PipelineStage) => {
+    setCollapsedStages((prev) => ({ ...prev, [stage]: !prev[stage] }));
+  };
+
+  const toggleDeal = (id: string) => {
+    setExpandedDealId((prev) => (prev === id ? null : id));
+  };
 
   return (
-    <main className="min-h-screen px-4 pb-8 pt-6 text-slate-100 sm:px-6 sm:pt-10 lg:px-10">
-      <div className="mx-auto w-full max-w-7xl">
-        {/* Header */}
-        <header className="glass-panel border-white/20 px-5 py-6 sm:px-8 sm:py-7">
-          <p className="text-xs font-medium uppercase tracking-[0.24em] text-cyan-200/90">
+    <main className="min-h-screen px-3 pb-8 pt-5 text-slate-100 sm:px-6 sm:pt-8">
+      <div className="mx-auto w-full max-w-3xl">
+        <header className="glass-panel border-white/20 px-4 py-4 sm:px-5">
+          <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-cyan-200/90">
             Sales Pipeline
           </p>
-          <h1 className="mt-3 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
-            CRM Pipeline
+          <h1 className="mt-2 text-2xl font-semibold tracking-tight text-white sm:text-3xl">
+            Pipeline Overview
           </h1>
-          <div className="mt-4 flex flex-wrap gap-4 text-sm">
-            <div>
-              <span className="text-slate-400">Total Pipeline:</span>{" "}
-              <span className="font-semibold text-white">
-                ${totalValue >= 1000 ? `${(totalValue / 1000).toFixed(0)}K+` : totalValue}
-              </span>
+          <div className="mt-4 grid grid-cols-3 gap-2 sm:gap-3">
+            <div className="glass-card rounded-xl border border-white/10 px-3 py-3">
+              <p className="text-[10px] uppercase tracking-[0.14em] text-slate-400">Deals</p>
+              <p className="mt-1 text-base font-semibold text-white sm:text-lg">{summary.totalDeals}</p>
             </div>
-            <div>
-              <span className="text-slate-400">Active Deals:</span>{" "}
-              <span className="font-semibold text-white">{deals.length}</span>
+            <div className="glass-card rounded-xl border border-white/10 px-3 py-3">
+              <p className="text-[10px] uppercase tracking-[0.14em] text-slate-400">Value</p>
+              <p className="mt-1 text-base font-semibold text-white sm:text-lg">
+                {formatCurrency(summary.totalValue)}
+              </p>
+            </div>
+            <div className="glass-card rounded-xl border border-white/10 px-3 py-3">
+              <p className="text-[10px] uppercase tracking-[0.14em] text-slate-400">Win Rate</p>
+              <p className="mt-1 text-base font-semibold text-white sm:text-lg">
+                {summary.winRate.toFixed(0)}%
+              </p>
             </div>
           </div>
         </header>
 
         {loading ? (
-          <div className="mt-6 text-center text-slate-400">Loading pipeline...</div>
+          <div className="mt-6 glass-card border border-white/10 px-4 py-8 text-center text-sm text-slate-300">
+            Loading pipeline...
+          </div>
         ) : (
-          <section className="mt-6">
-            <div className="flex gap-4 overflow-x-auto pb-4">
-              {stages.map((stage) => {
-                const stageDeals = deals.filter((deal) => deal.stage === stage);
-                const stageValue = stageDeals.reduce((sum, deal) => sum + (deal.value || 0), 0);
+          <section className="mt-4 space-y-3">
+            {stages.map((stage) => {
+              const stageDeals = groupedDeals[stage];
+              const stageValue = stageDeals.reduce((sum, deal) => sum + (deal.value || 0), 0);
+              const isCollapsed = collapsedStages[stage];
 
-                return (
-                  <article
-                    key={stage}
-                    className="glass-card min-w-[280px] flex-shrink-0 p-4 sm:min-w-[320px]"
+              return (
+                <article key={stage} className="glass-card overflow-hidden border border-white/10">
+                  <button
+                    type="button"
+                    onClick={() => toggleStage(stage)}
+                    className="flex w-full items-center justify-between gap-3 px-4 py-4 text-left active:scale-[0.99]"
+                    aria-expanded={!isCollapsed}
                   >
-                    <div className="mb-4">
-                      <h2 className="text-lg font-semibold text-white">{stage}</h2>
-                      <div className="mt-1 flex items-baseline gap-2">
-                        <span className="text-sm text-slate-400">
-                          {stageDeals.length} {stageDeals.length === 1 ? "deal" : "deals"}
-                        </span>
-                        {stageValue > 0 && (
-                          <>
-                            <span className="text-slate-600">•</span>
-                            <span className="text-sm font-medium text-cyan-300">
-                              ${(stageValue / 1000).toFixed(0)}K
-                            </span>
-                          </>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="space-y-3">
-                      {stageDeals.map((deal) => (
-                        <div
-                          key={deal.id}
-                          className={`rounded-xl border p-4 transition-transform hover:scale-[1.02] ${stageColors[stage]}`}
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <h2 className="truncate text-base font-semibold text-white sm:text-lg">{stage}</h2>
+                        <span
+                          className={`inline-flex h-6 min-w-6 items-center justify-center rounded-full border px-2 text-xs font-medium ${stageLabelStyles[stage]}`}
                         >
-                          <h3 className="font-semibold text-white">{deal.company}</h3>
-                          <p className="mt-1 text-sm text-slate-300">
-                            {deal.contact_id || "No contact"}
-                          </p>
-                          <div className="mt-3 flex items-center justify-between text-xs">
-                            <span className="font-medium text-cyan-300">
-                              {deal.value ? `$${deal.value.toLocaleString()}` : "TBD"}
-                            </span>
-                            <span className="text-slate-400">{getTimeAgo(deal.updated_at)}</span>
-                          </div>
-                          {deal.notes && (
-                            <p className="mt-2 text-xs text-slate-400">{deal.notes}</p>
-                          )}
-                        </div>
-                      ))}
-
-                      {stageDeals.length === 0 && (
-                        <div className="rounded-xl border border-dashed border-white/10 bg-white/5 px-3 py-8 text-center text-xs text-slate-400">
-                          Drop deal card here
-                        </div>
-                      )}
+                          {stageDeals.length}
+                        </span>
+                      </div>
+                      <p className="mt-1 text-sm text-slate-300">{formatCurrency(stageValue)}</p>
                     </div>
-                  </article>
-                );
-              })}
-            </div>
+                    <motion.span
+                      animate={{ rotate: isCollapsed ? 0 : 180 }}
+                      transition={{ duration: 0.2 }}
+                      className="text-lg leading-none text-cyan-200"
+                    >
+                      ⌄
+                    </motion.span>
+                  </button>
+
+                  <AnimatePresence initial={false}>
+                    {!isCollapsed && (
+                      <motion.div
+                        key={`${stage}-content`}
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.22, ease: "easeOut" }}
+                        className="overflow-hidden"
+                      >
+                        <div className="space-y-2 px-3 pb-3">
+                          {stageDeals.length === 0 && (
+                            <div className="rounded-lg border border-dashed border-white/15 bg-white/5 px-3 py-4 text-center text-xs text-slate-400">
+                              No deals in this stage
+                            </div>
+                          )}
+
+                          {stageDeals.map((deal) => {
+                            const isExpanded = expandedDealId === deal.id;
+                            const daysInStage = getDaysInStage(deal.updated_at);
+
+                            return (
+                              <motion.div
+                                key={deal.id}
+                                layout
+                                className="glass-panel rounded-xl border border-white/10"
+                              >
+                                <button
+                                  type="button"
+                                  onClick={() => toggleDeal(deal.id)}
+                                  className="w-full px-3 py-3 text-left"
+                                  aria-expanded={isExpanded}
+                                >
+                                  <div className="flex items-start justify-between gap-3">
+                                    <div className="min-w-0">
+                                      <div className="flex items-center gap-2">
+                                        <span
+                                          className={`mt-1 h-2.5 w-2.5 flex-shrink-0 rounded-full ${statusDotStyles[deal.pipelineStage]}`}
+                                          aria-hidden="true"
+                                        />
+                                        <p className="truncate text-sm font-semibold text-white sm:text-base">
+                                          {deal.company}
+                                        </p>
+                                      </div>
+                                      <p className="mt-1 truncate text-xs text-slate-300 sm:text-sm">
+                                        {deal.contact_id || "No contact"}
+                                      </p>
+                                    </div>
+                                    <div className="text-right">
+                                      <p className="text-sm font-semibold text-cyan-200 sm:text-base">
+                                        {deal.value ? formatCurrency(deal.value) : "TBD"}
+                                      </p>
+                                      <p className="mt-1 text-xs text-slate-400">{daysInStage}d</p>
+                                    </div>
+                                  </div>
+                                </button>
+
+                                <AnimatePresence initial={false}>
+                                  {isExpanded && (
+                                    <motion.div
+                                      initial={{ height: 0, opacity: 0 }}
+                                      animate={{ height: "auto", opacity: 1 }}
+                                      exit={{ height: 0, opacity: 0 }}
+                                      transition={{ duration: 0.2 }}
+                                      className="overflow-hidden"
+                                    >
+                                      <div className="border-t border-white/10 px-3 py-3 text-xs text-slate-300 sm:text-sm">
+                                        <p>
+                                          <span className="text-slate-400">Created:</span>{" "}
+                                          {new Date(deal.created_at).toLocaleDateString()}
+                                        </p>
+                                        <p className="mt-1">
+                                          <span className="text-slate-400">Last update:</span>{" "}
+                                          {new Date(deal.updated_at).toLocaleDateString()}
+                                        </p>
+                                        <p className="mt-1">
+                                          <span className="text-slate-400">Days in stage:</span> {daysInStage}
+                                        </p>
+                                        {deal.notes && (
+                                          <p className="mt-2 text-slate-200">
+                                            <span className="text-slate-400">Notes:</span> {deal.notes}
+                                          </p>
+                                        )}
+                                      </div>
+                                    </motion.div>
+                                  )}
+                                </AnimatePresence>
+                              </motion.div>
+                            );
+                          })}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </article>
+              );
+            })}
           </section>
         )}
       </div>
