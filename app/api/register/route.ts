@@ -1,6 +1,13 @@
 import { NextResponse } from "next/server";
 import { sql } from "@/lib/db";
 import bcrypt from "bcryptjs";
+import {
+  validateUsername,
+  validatePassword,
+  validateEmail,
+  validateFullName,
+  validateInviteCode,
+} from "@/lib/validation";
 
 export async function POST(request: Request) {
   try {
@@ -15,6 +22,32 @@ export async function POST(request: Request) {
       );
     }
 
+    // Validate inputs
+    const usernameError = validateUsername(username);
+    if (usernameError) {
+      return NextResponse.json({ error: usernameError }, { status: 400 });
+    }
+
+    const passwordError = validatePassword(password);
+    if (passwordError) {
+      return NextResponse.json({ error: passwordError }, { status: 400 });
+    }
+
+    const fullNameError = validateFullName(fullName);
+    if (fullNameError) {
+      return NextResponse.json({ error: fullNameError }, { status: 400 });
+    }
+
+    const emailError = validateEmail(email || "");
+    if (emailError) {
+      return NextResponse.json({ error: emailError }, { status: 400 });
+    }
+
+    const inviteCodeError = validateInviteCode(inviteCode);
+    if (inviteCodeError) {
+      return NextResponse.json({ error: inviteCodeError }, { status: 400 });
+    }
+
     if (!sql) {
       return NextResponse.json(
         { error: "Database not configured" },
@@ -22,10 +55,10 @@ export async function POST(request: Request) {
       );
     }
 
-    // Validate invite code
+    // Validate invite code (case-insensitive)
     const invites = await sql`
       SELECT * FROM invites 
-      WHERE code = ${inviteCode}
+      WHERE UPPER(code) = UPPER(${inviteCode})
         AND (expires_at IS NULL OR expires_at > NOW())
         AND (max_uses IS NULL OR current_uses < max_uses)
     `;
@@ -37,9 +70,9 @@ export async function POST(request: Request) {
       );
     }
 
-    // Check if username already exists
+    // Check if username already exists (case-insensitive)
     const existingUsers = await sql`
-      SELECT id FROM users WHERE username = ${username}
+      SELECT id FROM users WHERE LOWER(username) = LOWER(${username})
     `;
 
     if (existingUsers.length > 0) {

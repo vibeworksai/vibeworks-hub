@@ -5,6 +5,13 @@ import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import {
+  validateUsername,
+  validatePassword,
+  validateEmail,
+  validateFullName,
+  validateInviteCode,
+} from "@/lib/validation";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -30,15 +37,40 @@ export default function RegisterPage() {
     e.preventDefault();
     setError("");
 
-    // Validate passwords match
-    if (formData.password !== formData.confirmPassword) {
-      setError("Passwords do not match");
+    // Client-side validation
+    const inviteError = validateInviteCode(formData.inviteCode);
+    if (inviteError) {
+      setError(inviteError);
       return;
     }
 
-    // Validate password length
-    if (formData.password.length < 8) {
-      setError("Password must be at least 8 characters");
+    const nameError = validateFullName(formData.fullName);
+    if (nameError) {
+      setError(nameError);
+      return;
+    }
+
+    const usernameError = validateUsername(formData.username);
+    if (usernameError) {
+      setError(usernameError);
+      return;
+    }
+
+    const emailError = validateEmail(formData.email);
+    if (emailError) {
+      setError(emailError);
+      return;
+    }
+
+    const passwordError = validatePassword(formData.password);
+    if (passwordError) {
+      setError(passwordError);
+      return;
+    }
+
+    // Validate passwords match
+    if (formData.password !== formData.confirmPassword) {
+      setError("Passwords do not match");
       return;
     }
 
