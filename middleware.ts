@@ -6,9 +6,13 @@ export default auth((req) => {
 
   // Public routes that don't require authentication
   const publicRoutes = ["/login", "/register", "/api/auth", "/api/register"];
+  
+  // Onboarding routes (authenticated but allowed even if onboarding incomplete)
+  const onboardingRoutes = ["/onboarding", "/api/onboarding"];
 
-  // Check if current path is public
+  // Check if current path is public or onboarding
   const isPublicRoute = publicRoutes.some((route) => pathname.startsWith(route));
+  const isOnboardingRoute = onboardingRoutes.some((route) => pathname.startsWith(route));
 
   if (!req.auth && !isPublicRoute) {
     // Redirect to login if not authenticated
@@ -18,11 +22,11 @@ export default auth((req) => {
   }
 
   // If authenticated but onboarding not complete, redirect to onboarding
+  // (unless already on onboarding route)
   if (
     req.auth &&
     !req.auth.user.onboardingComplete &&
-    pathname !== "/onboarding" &&
-    !pathname.startsWith("/api")
+    !isOnboardingRoute
   ) {
     return NextResponse.redirect(new URL("/onboarding", req.url));
   }

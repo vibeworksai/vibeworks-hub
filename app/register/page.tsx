@@ -86,7 +86,8 @@ export default function RegisterPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        setError(data.error || "Registration failed");
+        console.error("Registration failed:", data);
+        setError(data.error || "Registration failed. Please check all fields.");
         setLoading(false);
         return;
       }

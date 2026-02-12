@@ -82,24 +82,28 @@ export default function OnboardingPage() {
 
   const finishOnboarding = async () => {
     setFinishing(true);
-    console.log("Finishing onboarding, refreshing session and redirecting...");
+    console.log("Finishing onboarding, marking complete in API...");
     
     try {
-      // Force session refresh one more time to ensure onboarding_complete is updated
-      await update();
+      // Call a separate completion endpoint to ensure DB is updated
+      const completeResponse = await fetch("/api/onboarding/complete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
       
-      // Small delay to ensure session cookie is set
-      await new Promise(resolve => setTimeout(resolve, 500));
+      if (!completeResponse.ok) {
+        throw new Error("Failed to mark onboarding as complete");
+      }
       
-      console.log("Session refreshed, navigating to dashboard...");
+      console.log("Onboarding marked complete, navigating to dashboard...");
       
-      // Use window.location for more reliable navigation on mobile
-      window.location.href = "/";
+      // Force a complete page navigation with reload
+      // This will cause NextAuth to re-check the session from database
+      window.location.replace("/");
     } catch (error) {
-      console.error("Navigation error:", error);
-      // Fallback to router if window.location fails
-      router.push("/");
-      router.refresh();
+      console.error("Completion error:", error);
+      alert("Error completing onboarding. Please try again.");
+      setFinishing(false);
     }
   };
 
