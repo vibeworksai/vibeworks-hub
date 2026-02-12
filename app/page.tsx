@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { NumerologyCard } from "./components/NumerologyCard";
 
 type ProjectStatus = "On Track" | "Caution" | "At Risk";
 
@@ -108,6 +109,11 @@ export default function HomePage() {
             </div>
           </div>
         </header>
+
+        {/* Numerology Card */}
+        <div className="mt-6 sm:mt-7">
+          <NumerologyCard />
+        </div>
 
         {loading ? (
           <div className="mt-6 text-center text-slate-400">Loading projects...</div>
