@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { NumerologyCard } from "./components/NumerologyCard";
+import { useSession } from "next-auth/react";
+import { MysticalCommandCenter } from "./components/MysticalCommandCenter";
 
 type ProjectStatus = "On Track" | "Caution" | "At Risk";
 
@@ -45,6 +46,7 @@ function getTimeAgo(timestamp: string): string {
 }
 
 export default function HomePage() {
+  const { data: session } = useSession();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -110,10 +112,12 @@ export default function HomePage() {
           </div>
         </header>
 
-        {/* Numerology Card */}
-        <div className="mt-6 sm:mt-7">
-          <NumerologyCard />
-        </div>
+        {/* Mystical Command Center - Personalized Dashboard */}
+        {session?.user && (
+          <div className="mt-6 sm:mt-7">
+            <MysticalCommandCenter />
+          </div>
+        )}
 
         {loading ? (
           <div className="mt-6 text-center text-slate-400">Loading projects...</div>
