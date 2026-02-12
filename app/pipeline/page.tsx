@@ -1,5 +1,8 @@
 "use client";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 import { useEffect, useState } from "react";
 
 type DealStage = "Lead" | "Qualified" | "Proposal Sent" | "Negotiation" | "Closed Won" | "Closed Lost";
