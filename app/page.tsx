@@ -84,6 +84,30 @@ export default function HomePage() {
           <p className="mt-3 max-w-2xl text-sm text-slate-300 sm:text-base">
             Real-time portfolio view with execution momentum, delivery risk, and system health.
           </p>
+
+          {/* Quick Stats */}
+          <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
+            <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+              <p className="text-xs text-slate-400">Active Projects</p>
+              <p className="mt-1 text-2xl font-semibold text-white">{projects.length}</p>
+            </div>
+            <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+              <p className="text-xs text-slate-400">On Track</p>
+              <p className="mt-1 text-2xl font-semibold text-emerald-300">
+                {projects.filter((p) => p.status === "On Track").length}
+              </p>
+            </div>
+            <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+              <p className="text-xs text-slate-400">Pipeline Value</p>
+              <p className="mt-1 text-2xl font-semibold text-cyan-300">$36K+</p>
+            </div>
+            <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+              <p className="text-xs text-slate-400">Avg Progress</p>
+              <p className="mt-1 text-2xl font-semibold text-white">
+                {Math.round(projects.reduce((sum, p) => sum + p.progress, 0) / projects.length)}%
+              </p>
+            </div>
+          </div>
         </header>
 
         <section className="mt-6 grid grid-cols-1 gap-4 sm:mt-7 sm:gap-5 lg:grid-cols-2 xl:grid-cols-3">
