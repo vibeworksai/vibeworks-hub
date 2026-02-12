@@ -67,7 +67,15 @@ function normalizeStage(stage: RawDealStage): PipelineStage {
   return "On Hold";
 }
 
-function formatCurrency(value: number): string {
+function formatCurrency(value: number, compact = false): string {
+  if (compact && value >= 1000000) {
+    // For millions
+    return `$${(value / 1000000).toFixed(1)}M`;
+  } else if (compact && value >= 1000) {
+    // For thousands
+    return `$${(value / 1000).toFixed(0)}K`;
+  }
+  
   return value.toLocaleString("en-US", {
     style: "currency",
     currency: "USD",
@@ -152,6 +160,22 @@ export default function PipelinePage() {
     setExpandedDealId((prev) => (prev === id ? null : id));
   };
 
+  const updateDealStage = async (dealId: string, newStage: PipelineStage) => {
+    try {
+      const res = await fetch("/api/deals", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: dealId, stage: newStage })
+      });
+      
+      if (res.ok) {
+        await fetchDeals(); // Refresh deals
+      }
+    } catch (error) {
+      console.error("Failed to update deal stage:", error);
+    }
+  };
+
   return (
     <main className="min-h-screen px-3 pb-8 pt-5 text-slate-100 sm:px-6 sm:pt-8">
       <div className="mx-auto w-full max-w-3xl">
@@ -170,7 +194,7 @@ export default function PipelinePage() {
             <div className="glass-card rounded-xl border border-white/10 px-3 py-3">
               <p className="text-[10px] uppercase tracking-[0.14em] text-slate-400">Value</p>
               <p className="mt-1 text-base font-semibold text-white sm:text-lg">
-                {formatCurrency(summary.totalValue)}
+                {summary.totalValue > 0 ? formatCurrency(summary.totalValue, true) : "$0"}
               </p>
             </div>
             <div className="glass-card rounded-xl border border-white/10 px-3 py-3">
@@ -210,7 +234,9 @@ export default function PipelinePage() {
                           {stageDeals.length}
                         </span>
                       </div>
-                      <p className="mt-1 text-sm text-slate-300">{formatCurrency(stageValue)}</p>
+                      <p className="mt-1 text-sm text-slate-300">
+                        {stageValue > 0 ? formatCurrency(stageValue, true) : "$0"}
+                      </p>
                     </div>
                     <motion.span
                       animate={{ rotate: isCollapsed ? 0 : 180 }}
@@ -304,6 +330,35 @@ export default function PipelinePage() {
                                             <span className="text-slate-400">Notes:</span> {deal.notes}
                                           </p>
                                         )}
+                                        
+                                        {/* Stage Controls */}
+                                        <div className="mt-3 border-t border-white/10 pt-3">
+                                          <p className="mb-2 text-xs text-slate-400">Move to stage:</p>
+                                          <div className="flex flex-wrap gap-1.5">
+                                            {stages.map((targetStage) => {
+                                              const isCurrent = targetStage === deal.pipelineStage;
+                                              return (
+                                                <button
+                                                  key={targetStage}
+                                                  type="button"
+                                                  onClick={() => {
+                                                    if (!isCurrent) {
+                                                      updateDealStage(deal.id, targetStage);
+                                                    }
+                                                  }}
+                                                  disabled={isCurrent}
+                                                  className={`rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-all active:scale-95 ${
+                                                    isCurrent
+                                                      ? "border-cyan-400/50 bg-cyan-400/20 text-cyan-100 cursor-default"
+                                                      : "border-white/20 bg-white/5 text-slate-200 hover:border-cyan-300/40 hover:bg-cyan-400/10 hover:text-cyan-100"
+                                                  }`}
+                                                >
+                                                  {targetStage}
+                                                </button>
+                                              );
+                                            })}
+                                          </div>
+                                        </div>
                                       </div>
                                     </motion.div>
                                   )}
