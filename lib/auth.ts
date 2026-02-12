@@ -72,7 +72,8 @@ export const {
     signIn: "/login",
   },
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger }) {
+      // On sign in, set initial token data
       if (user) {
         token.id = user.id;
         token.username = user.username;
@@ -80,6 +81,26 @@ export const {
         token.sunSign = user.sunSign;
         token.onboardingComplete = user.onboardingComplete;
       }
+      
+      // On update trigger (after onboarding), refresh from database
+      if (trigger === "update" && token.id && sql) {
+        try {
+          const users = await sql`
+            SELECT * FROM users WHERE id = ${token.id as string}
+          `;
+          
+          const freshUser = users[0];
+          if (freshUser) {
+            token.username = freshUser.username;
+            token.lifePathNumber = freshUser.life_path_number;
+            token.sunSign = freshUser.sun_sign;
+            token.onboardingComplete = freshUser.onboarding_complete;
+          }
+        } catch (error) {
+          console.error("Token refresh error:", error);
+        }
+      }
+      
       return token;
     },
     async session({ session, token }) {

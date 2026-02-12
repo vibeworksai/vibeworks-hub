@@ -82,9 +82,17 @@ export default function OnboardingPage() {
 
   const finishOnboarding = async () => {
     setFinishing(true);
-    console.log("Finishing onboarding, redirecting to dashboard...");
+    console.log("Finishing onboarding, refreshing session and redirecting...");
     
     try {
+      // Force session refresh one more time to ensure onboarding_complete is updated
+      await update();
+      
+      // Small delay to ensure session cookie is set
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      console.log("Session refreshed, navigating to dashboard...");
+      
       // Use window.location for more reliable navigation on mobile
       window.location.href = "/";
     } catch (error) {
