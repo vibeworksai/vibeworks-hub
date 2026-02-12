@@ -78,9 +78,21 @@ export default function OnboardingPage() {
     }
   };
 
-  const finishOnboarding = () => {
-    router.push("/");
-    router.refresh();
+  const [finishing, setFinishing] = useState(false);
+
+  const finishOnboarding = async () => {
+    setFinishing(true);
+    console.log("Finishing onboarding, redirecting to dashboard...");
+    
+    try {
+      // Use window.location for more reliable navigation on mobile
+      window.location.href = "/";
+    } catch (error) {
+      console.error("Navigation error:", error);
+      // Fallback to router if window.location fails
+      router.push("/");
+      router.refresh();
+    }
   };
 
   return (
@@ -344,9 +356,10 @@ export default function OnboardingPage() {
                 <div className="mt-8 flex justify-center">
                   <button
                     onClick={finishOnboarding}
-                    className="rounded-lg border border-cyan-300/30 bg-cyan-400/20 px-8 py-4 text-lg font-semibold text-cyan-100 shadow-[0_0_25px_rgba(34,211,238,0.2)] transition-all hover:bg-cyan-400/30 hover:shadow-[0_0_30px_rgba(34,211,238,0.3)] active:scale-95"
+                    disabled={finishing}
+                    className="rounded-lg border border-cyan-300/30 bg-cyan-400/20 px-8 py-4 text-lg font-semibold text-cyan-100 shadow-[0_0_25px_rgba(34,211,238,0.2)] transition-all hover:bg-cyan-400/30 hover:shadow-[0_0_30px_rgba(34,211,238,0.3)] active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
                   >
-                    Enter Your Command Center →
+                    {finishing ? "Loading..." : "Enter Your Command Center →"}
                   </button>
                 </div>
               </motion.div>
