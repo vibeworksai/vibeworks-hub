@@ -8,7 +8,8 @@ export default function Navigation() {
 
   const links = [
     { href: "/", label: "Dashboard" },
-    { href: "/pipeline", label: "Pipeline" }
+    { href: "/pipeline", label: "Pipeline" },
+    { href: "/ideas", label: "Ideas" }
   ];
 
   return (
