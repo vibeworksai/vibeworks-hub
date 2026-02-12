@@ -102,6 +102,63 @@ Content-Type: application/json
 - `Caution` - Needs attention
 - `At Risk` - Behind schedule
 
+### Contacts API (CRM)
+
+**Get all contacts:**
+```bash
+GET /api/contacts
+```
+
+**Response:**
+```json
+{
+  "contacts": [
+    {
+      "id": "1",
+      "name": "Jameel",
+      "company": "Supreme Financial",
+      "email": "jameel@supremefinancial.com",
+      "phone": "+1-555-0123",
+      "tags": ["High Value", "Copy Trading"],
+      "lastContact": "2026-02-12T19:00:00.000Z",
+      "notes": "Primary contact for $36K copy trading platform",
+      "dealId": "1"
+    }
+  ]
+}
+```
+
+**Create new contact:**
+```bash
+POST /api/contacts
+Content-Type: application/json
+
+{
+  "name": "John Doe",
+  "company": "Acme Corp",
+  "email": "john@acme.com",
+  "phone": "+1-555-9999",
+  "tags": ["Lead"],
+  "notes": "Met at conference"
+}
+```
+
+**Update contact:**
+```bash
+PATCH /api/contacts
+Content-Type: application/json
+
+{
+  "id": "1",
+  "notes": "Follow up scheduled for next week"
+}
+```
+
+**Delete contact:**
+```bash
+DELETE /api/contacts?id=1
+```
+
 ## Usage Example (Python)
 
 ```python
