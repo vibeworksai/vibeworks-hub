@@ -70,11 +70,13 @@ export default function ContactsPage() {
   const handleAddContact = () => {
     if (!newContact.name || !newContact.company) return;
 
+    const now = new Date().toISOString();
     const contact: Contact = {
       id: Date.now().toString(),
       ...newContact,
       tags: [],
-      lastContact: "Just now"
+      created_at: now,
+      updated_at: now
     };
 
     setContacts([contact, ...contacts]);
