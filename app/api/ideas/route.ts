@@ -70,7 +70,7 @@ export async function POST(request: Request) {
 
     // Log activity
     await sql`
-      INSERT INTO activity_feed (id, user, action, target, timestamp)
+      INSERT INTO activity_feed (id, username, action, target, timestamp)
       VALUES (${`activity-${Date.now()}`}, ${"System"}, ${"created"}, ${`idea: ${idea.title}`}, ${new Date().toISOString()})
     `;
 
@@ -144,7 +144,7 @@ export async function DELETE(request: Request) {
 
     // Log activity
     await sql`
-      INSERT INTO activity_feed (id, user, action, target, timestamp)
+      INSERT INTO activity_feed (id, username, action, target, timestamp)
       VALUES (${`activity-${Date.now()}`}, ${"System"}, ${"deleted"}, ${`idea: ${result[0].title}`}, ${new Date().toISOString()})
     `;
 

@@ -76,7 +76,7 @@ export async function POST(request: Request) {
 
     // Log activity
     await sql`
-      INSERT INTO activity_feed (id, user, action, target, timestamp)
+      INSERT INTO activity_feed (id, username, action, target, timestamp)
       VALUES (${`activity-${Date.now()}`}, ${"Farrah"}, ${"created"}, ${`contact: ${contact.name} (${contact.company})`}, ${new Date().toISOString()})
     `;
 
@@ -121,7 +121,7 @@ export async function PATCH(request: Request) {
 
     // Log activity
     await sql`
-      INSERT INTO activity_feed (id, user, action, target, timestamp)
+      INSERT INTO activity_feed (id, username, action, target, timestamp)
       VALUES (${`activity-${Date.now()}`}, ${"Farrah"}, ${"updated"}, ${`contact: ${result[0].name}`}, ${new Date().toISOString()})
     `;
 
@@ -158,7 +158,7 @@ export async function DELETE(request: Request) {
 
     // Log activity
     await sql`
-      INSERT INTO activity_feed (id, user, action, target, timestamp)
+      INSERT INTO activity_feed (id, username, action, target, timestamp)
       VALUES (${`activity-${Date.now()}`}, ${"Farrah"}, ${"deleted"}, ${`contact: ${result[0].name}`}, ${new Date().toISOString()})
     `;
 
