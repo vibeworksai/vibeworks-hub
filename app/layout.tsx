@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import Navigation from "./components/Navigation";
 import { Providers } from "./providers";
+import { HelpOverlay } from "./components/HelpOverlay";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -39,6 +40,7 @@ export default function RootLayout({
         <Providers>
           <Navigation />
           {children}
+          <HelpOverlay />
         </Providers>
       </body>
     </html>

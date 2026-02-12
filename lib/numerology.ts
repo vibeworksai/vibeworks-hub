@@ -23,13 +23,14 @@ export function calculateLifePath(birthDate: Date): number {
     sum += parseInt(char, 10);
   }
   
-  // Check for Master Numbers (11, 22, 33) BEFORE reducing
-  if (sum === 11 || sum === 22 || sum === 33) {
-    return sum; // Keep master numbers
-  }
-  
-  // Otherwise reduce to single digit
+  // Reduce while checking for master numbers at EACH step
   while (sum > 9) {
+    // Check for Master Numbers (11, 22, 33) at EVERY reduction level
+    if (sum === 11 || sum === 22 || sum === 33) {
+      return sum; // Keep master numbers
+    }
+    
+    // Reduce to next level
     const digits = sum.toString().split('');
     sum = digits.reduce((acc, digit) => acc + parseInt(digit, 10), 0);
   }
