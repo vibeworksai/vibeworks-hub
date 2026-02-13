@@ -71,9 +71,23 @@ export async function GET(request: Request) {
     `;
 
     // If analyze=true, run fresh GPT-4 analysis
-    if (analyze && isOpenAIConfigured()) {
+    if (analyze) {
+      console.log("[Revenue Catalyst] Analyze requested for user:", userId);
+      console.log("[Revenue Catalyst] OpenAI configured:", isOpenAIConfigured());
+      
+      if (!isOpenAIConfigured()) {
+        return NextResponse.json({ 
+          opportunities,
+          error: "OpenAI API key not configured in environment",
+          analyzed: false,
+          mock: true
+        });
+      }
+      
       try {
+        console.log("[Revenue Catalyst] Starting GPT-4 analysis...");
         const newOpportunities = await analyzeUpsellOpportunities(userId);
+        console.log("[Revenue Catalyst] Analysis complete, found opportunities:", newOpportunities.length);
         
         // Store new opportunities in database
         for (const opp of newOpportunities) {

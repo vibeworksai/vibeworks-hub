@@ -39,15 +39,31 @@ export default function RevenueOpportunities({ userId }: { userId: string }) {
   };
 
   const runAnalysis = async () => {
+    console.log("[Revenue Opportunities] Starting analysis for user:", userId);
     setAnalyzing(true);
+    setError(""); // Clear previous errors
+    
     try {
-      const res = await fetch(`/api/intelligence/revenue-catalyst?user_id=${userId}&analyze=true`);
+      const url = `/api/intelligence/revenue-catalyst?user_id=${userId}&analyze=true`;
+      console.log("[Revenue Opportunities] Fetching:", url);
+      
+      const res = await fetch(url);
+      console.log("[Revenue Opportunities] Response status:", res.status);
+      
       const data = await res.json();
+      console.log("[Revenue Opportunities] Response data:", data);
+      
+      if (data.error) {
+        setError(data.error);
+        console.error("[Revenue Opportunities] API error:", data.error);
+      }
       
       if (data.opportunities) {
         setOpportunities(data.opportunities.slice(0, 5));
+        console.log("[Revenue Opportunities] Set opportunities:", data.opportunities.length);
       }
     } catch (err: any) {
+      console.error("[Revenue Opportunities] Fetch error:", err);
       setError(err.message);
     }
     setAnalyzing(false);
