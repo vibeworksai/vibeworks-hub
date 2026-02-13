@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
+import CreateTaskModal from "../components/CreateTaskModal";
 
 type Task = {
   id: string;
@@ -50,6 +51,7 @@ export default function TasksPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState<string>("all");
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   const fetchTasks = async () => {
     try {
@@ -115,12 +117,20 @@ export default function TasksPage() {
                 Tasks
               </h1>
             </div>
-            <Link
-              href="/"
-              className="text-sm font-medium text-cyan-300 transition-colors hover:text-cyan-200"
-            >
-              ← Dashboard
-            </Link>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setIsCreateModalOpen(true)}
+                className="rounded-lg bg-cyan-400 px-4 py-2 text-sm font-semibold text-slate-900 transition-all hover:bg-cyan-300"
+              >
+                + New Task
+              </button>
+              <Link
+                href="/"
+                className="text-sm font-medium text-cyan-300 transition-colors hover:text-cyan-200"
+              >
+                ← Back
+              </Link>
+            </div>
           </div>
 
           {/* Quick Stats */}
@@ -284,6 +294,13 @@ export default function TasksPage() {
           </p>
         </div>
       </div>
+
+      {/* Create Task Modal */}
+      <CreateTaskModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onTaskCreated={fetchTasks}
+      />
     </main>
   );
 }
