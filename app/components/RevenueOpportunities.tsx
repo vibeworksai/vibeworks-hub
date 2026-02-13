@@ -9,8 +9,8 @@ interface UpsellOpportunity {
   contact_id: string;
   opportunity_type: string;
   recommended_product: string;
-  estimated_value: number;
-  confidence_score: number;
+  estimated_value: number | string; // Neon returns NUMERIC as string
+  confidence_score: number | string; // Neon returns NUMERIC as string
   reasoning: string;
   similar_customers: string[];
   optimal_timing: string;
@@ -88,21 +88,27 @@ export default function RevenueOpportunities({ userId }: { userId: string }) {
     return () => clearInterval(interval);
   }, [userId]);
 
-  const formatValue = (value: number) => {
-    if (value >= 1000000) return `$${(value / 1000000).toFixed(1)}M`;
-    if (value >= 1000) return `$${(value / 1000).toFixed(0)}K`;
-    return `$${value}`;
+  const formatValue = (value: number | string) => {
+    // Parse string to number if needed (Neon returns NUMERIC as string)
+    const numValue = typeof value === 'string' ? parseFloat(value) : value;
+    
+    if (isNaN(numValue)) return '$0';
+    if (numValue >= 1000000) return `$${(numValue / 1000000).toFixed(1)}M`;
+    if (numValue >= 1000) return `$${Math.round(numValue / 1000)}K`;
+    return `$${Math.round(numValue)}`;
   };
 
-  const getConfidenceColor = (score: number) => {
-    if (score >= 80) return "text-green-400";
-    if (score >= 60) return "text-yellow-400";
+  const getConfidenceColor = (score: number | string) => {
+    const numScore = typeof score === 'string' ? parseFloat(score) : score;
+    if (numScore >= 80) return "text-green-400";
+    if (numScore >= 60) return "text-yellow-400";
     return "text-orange-400";
   };
 
-  const getConfidenceBg = (score: number) => {
-    if (score >= 80) return "bg-green-500/20";
-    if (score >= 60) return "bg-yellow-500/20";
+  const getConfidenceBg = (score: number | string) => {
+    const numScore = typeof score === 'string' ? parseFloat(score) : score;
+    if (numScore >= 80) return "bg-green-500/20";
+    if (numScore >= 60) return "bg-yellow-500/20";
     return "bg-orange-500/20";
   };
 
@@ -136,7 +142,12 @@ export default function RevenueOpportunities({ userId }: { userId: string }) {
     );
   }
 
-  const totalValue = opportunities.reduce((sum, opp) => sum + opp.estimated_value, 0);
+  const totalValue = opportunities.reduce((sum, opp) => {
+    const value = typeof opp.estimated_value === 'string' 
+      ? parseFloat(opp.estimated_value) 
+      : opp.estimated_value;
+    return sum + (isNaN(value) ? 0 : value);
+  }, 0);
 
   return (
     <div className="glass-card p-6">
@@ -196,7 +207,7 @@ export default function RevenueOpportunities({ userId }: { userId: string }) {
                     <div className="flex items-center gap-2 mb-1">
                       <span className="font-semibold text-lg">{opp.recommended_product}</span>
                       <span className={`px-2 py-0.5 rounded text-xs ${getConfidenceBg(opp.confidence_score)} ${getConfidenceColor(opp.confidence_score)}`}>
-                        {opp.confidence_score}% confidence
+                        {typeof opp.confidence_score === 'string' ? parseFloat(opp.confidence_score) : opp.confidence_score}% confidence
                       </span>
                     </div>
                     <p className="text-sm text-gray-400 mb-2">{opp.opportunity_type.toUpperCase()} • {opp.optimal_timing}</p>

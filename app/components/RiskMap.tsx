@@ -11,9 +11,9 @@ interface Risk {
   risk_description: string;
   entity_type: "deal" | "project" | "contact" | "business";
   entity_id: string | null;
-  probability: number;
-  impact: number;
-  risk_score: number;
+  probability: number | string; // Neon returns NUMERIC as string
+  impact: number | string; // Neon returns NUMERIC as string
+  risk_score: number | string; // Neon returns NUMERIC as string
   mitigation_strategies: string[];
   mitigation_status: string;
   identified_at: string;
@@ -74,10 +74,13 @@ export default function RiskMap({ userId }: { userId: string }) {
     return () => clearInterval(interval);
   }, [userId]);
 
-  const getRiskLevel = (score: number) => {
-    if (score >= 50) return { label: "CRITICAL", color: "text-red-400", bg: "bg-red-500/20", border: "border-red-500/30" };
-    if (score >= 25) return { label: "HIGH", color: "text-orange-400", bg: "bg-orange-500/20", border: "border-orange-500/30" };
-    if (score >= 10) return { label: "MEDIUM", color: "text-yellow-400", bg: "bg-yellow-500/20", border: "border-yellow-500/30" };
+  const getRiskLevel = (score: number | string) => {
+    // Parse string to number if needed (Neon returns NUMERIC as string)
+    const numScore = typeof score === 'string' ? parseFloat(score) : score;
+    
+    if (numScore >= 50) return { label: "CRITICAL", color: "text-red-400", bg: "bg-red-500/20", border: "border-red-500/30" };
+    if (numScore >= 25) return { label: "HIGH", color: "text-orange-400", bg: "bg-orange-500/20", border: "border-orange-500/30" };
+    if (numScore >= 10) return { label: "MEDIUM", color: "text-yellow-400", bg: "bg-yellow-500/20", border: "border-yellow-500/30" };
     return { label: "LOW", color: "text-green-400", bg: "bg-green-500/20", border: "border-green-500/30" };
   };
 
@@ -202,9 +205,11 @@ export default function RiskMap({ userId }: { userId: string }) {
                     </div>
                     <div className="text-right">
                       <p className="text-sm text-gray-400">Risk Score</p>
-                      <p className={`text-2xl font-bold ${level.color}`}>{risk.risk_score}</p>
+                      <p className={`text-2xl font-bold ${level.color}`}>
+                        {typeof risk.risk_score === 'string' ? Math.round(parseFloat(risk.risk_score)) : Math.round(risk.risk_score)}
+                      </p>
                       <p className="text-xs text-gray-500">
-                        {risk.probability}% × {risk.impact}%
+                        {typeof risk.probability === 'string' ? Math.round(parseFloat(risk.probability)) : Math.round(risk.probability)}% × {typeof risk.impact === 'string' ? Math.round(parseFloat(risk.impact)) : Math.round(risk.impact)}%
                       </p>
                     </div>
                   </div>

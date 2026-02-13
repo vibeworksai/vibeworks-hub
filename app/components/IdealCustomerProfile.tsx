@@ -18,11 +18,11 @@ interface ICP {
   user_id: string;
   profile_version: number;
   attributes: CustomerAttributes;
-  avg_ltv: number;
-  avg_deal_size: number;
-  avg_time_to_close: number;
-  churn_rate: number;
-  referral_rate: number;
+  avg_ltv: number | string; // Neon returns NUMERIC as string
+  avg_deal_size: number | string; // Neon returns NUMERIC as string
+  avg_time_to_close: number | string; // Neon returns NUMERIC as string
+  churn_rate: number | string; // Neon returns NUMERIC as string
+  referral_rate: number | string; // Neon returns NUMERIC as string
   common_pain_points: string[];
   common_objections: string[];
   decision_factors: string[];
@@ -72,14 +72,22 @@ export default function IdealCustomerProfile({ userId }: { userId: string }) {
     return () => clearInterval(interval);
   }, [userId]);
 
-  const formatValue = (value: number) => {
-    if (value >= 1000000) return `$${(value / 1000000).toFixed(1)}M`;
-    if (value >= 1000) return `$${(value / 1000).toFixed(0)}K`;
-    return `$${value}`;
+  const formatValue = (value: number | string) => {
+    // Parse string to number if needed (Neon returns NUMERIC as string)
+    const numValue = typeof value === 'string' ? parseFloat(value) : value;
+    
+    if (isNaN(numValue)) return '$0';
+    if (numValue >= 1000000) return `$${(numValue / 1000000).toFixed(1)}M`;
+    if (numValue >= 1000) return `$${Math.round(numValue / 1000)}K`;
+    return `$${Math.round(numValue)}`;
   };
 
-  const formatPercent = (value: number) => {
-    return `${(value * 100).toFixed(0)}%`;
+  const formatPercent = (value: number | string) => {
+    // Parse string to number if needed (Neon returns NUMERIC as string)
+    const numValue = typeof value === 'string' ? parseFloat(value) : value;
+    
+    if (isNaN(numValue)) return '0%';
+    return `${(numValue * 100).toFixed(0)}%`;
   };
 
   if (loading) {
