@@ -6,6 +6,9 @@ import { useSession } from "next-auth/react";
 import { MysticalCommandCenter } from "./components/MysticalCommandCenter";
 import { EnhancedMysticalInsights } from "./components/EnhancedMysticalInsights";
 import { TodaysFocus } from "./components/TodaysFocus";
+import RevenueOpportunities from "./components/RevenueOpportunities";
+import IdealCustomerProfile from "./components/IdealCustomerProfile";
+import RiskMap from "./components/RiskMap";
 
 type ProjectStatus = "On Track" | "Caution" | "At Risk";
 
@@ -124,6 +127,20 @@ export default function HomePage() {
             {/* Enhanced Mystical Insights - Moon, Tarot, Business Timing */}
             <div className="mt-6 sm:mt-7">
               <EnhancedMysticalInsights />
+            </div>
+            
+            {/* Strategic Intelligence Layer - AI-Powered Business Insights */}
+            <div className="mt-6 sm:mt-7">
+              <h2 className="text-2xl font-semibold mb-4 px-1">
+                🧠 Strategic Intelligence
+              </h2>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <RevenueOpportunities userId={session.user.id || "1"} />
+                <IdealCustomerProfile userId={session.user.id || "1"} />
+              </div>
+              <div className="mt-6">
+                <RiskMap userId={session.user.id || "1"} />
+              </div>
             </div>
             
             {/* Today's Focus - GTD Task Management */}
