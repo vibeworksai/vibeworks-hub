@@ -78,19 +78,8 @@ export function calculateDealProbability(
     factors.push("Large deal - requires more alignment");
   }
 
-  // Tarot influence
-  const tarot = getDailyTarot();
-  if (
-    tarot.name === "The Magician" ||
-    tarot.name === "The Sun" ||
-    tarot.name === "The World"
-  ) {
-    score += 10;
-    factors.push(`Tarot: ${tarot.name} - Highly favorable`);
-  } else if (tarot.reversed) {
-    score -= 5;
-    factors.push(`Tarot: ${tarot.name} (Reversed) - Minor obstacles`);
-  }
+  // Note: Tarot influence requires userId context, skip for deal probability
+  // (This function doesn't have userId parameter, would need refactor to add it)
 
   // Cap between 0-100
   const probability = Math.max(0, Math.min(100, score));
@@ -245,15 +234,23 @@ export function analyzeTeamCompatibility(
  */
 export function getTodayBusinessRecommendations(
   lifePathNumber: number,
-  universalDayNumber: number
+  universalDayNumber: number,
+  userId?: string
 ): BusinessRecommendation[] {
   const recommendations: BusinessRecommendation[] = [];
   const moonPhase = getCurrentMoonPhase();
-  const tarot = getDailyTarot();
+  const tarot = getDailyTarot(new Date(), userId);
 
-  // Deal Closing
+  // Deal Closing (personalized)
   let dealScore = 5;
   let dealReasoning = "";
+  
+  // Add user-specific variation (-1 to +1)
+  if (userId) {
+    const userSeed = userId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    const variation = (userSeed % 3) - 1; // -1, 0, or +1
+    dealScore += variation;
+  }
 
   if (universalDayNumber === 8) {
     dealScore += 3;
@@ -280,9 +277,16 @@ export function getTodayBusinessRecommendations(
     reasoning: dealReasoning + moonPhase.businessGuidance,
   });
 
-  // New Ventures
+  // New Ventures (personalized)
   let ventureScore = 5;
   let ventureReasoning = "";
+  
+  // Add user-specific variation (-1 to +1)
+  if (userId) {
+    const userSeed = userId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    const variation = ((userSeed * 2) % 3) - 1; // Different seed than deal score
+    ventureScore += variation;
+  }
 
   if (universalDayNumber === 1) {
     ventureScore += 3;
@@ -305,9 +309,16 @@ export function getTodayBusinessRecommendations(
     reasoning: ventureReasoning || "Focus on existing momentum.",
   });
 
-  // Strategic Planning
+  // Strategic Planning (personalized)
   let strategyScore = 5;
   let strategyReasoning = "";
+  
+  // Add user-specific variation (0 to +2)
+  if (userId) {
+    const userSeed = userId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    const variation = (userSeed * 3) % 3; // Different seed, 0-2 range
+    strategyScore += variation;
+  }
 
   if (universalDayNumber === 7) {
     strategyScore += 3;

@@ -193,17 +193,25 @@ const majorArcana: Omit<TarotCard, "reversed">[] = [
 ];
 
 /**
- * Get daily tarot card (deterministic based on date)
+ * Get daily tarot card (deterministic based on date + user ID)
+ * Each user gets a unique card per day
  */
-export function getDailyTarot(date: Date = new Date()): TarotCard {
-  // Use date as seed for deterministic selection
+export function getDailyTarot(date: Date = new Date(), userId?: string): TarotCard {
+  // Use date + userId as seed for deterministic but personalized selection
   const dateString = date.toISOString().split("T")[0];
-  const seed = dateString.split("-").reduce((acc, val) => acc + parseInt(val, 10), 0);
+  let seed = dateString.split("-").reduce((acc, val) => acc + parseInt(val, 10), 0);
+  
+  // Add user ID to seed for personalization
+  if (userId) {
+    // Convert userId string to number
+    const userSeed = userId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    seed = seed * userSeed;
+  }
 
   const cardIndex = seed % majorArcana.length;
   const baseCard = majorArcana[cardIndex];
 
-  // Determine if reversed (upside down) - alternating days
+  // Determine if reversed (upside down) - based on combined seed
   const reversed = seed % 2 === 0;
 
   return {

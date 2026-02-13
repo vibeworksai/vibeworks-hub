@@ -18,14 +18,15 @@ export async function GET() {
     const nextFullMoon = getNextFullMoon();
     const nextNewMoon = getNextNewMoon();
 
-    // Get daily tarot
-    const tarot = getDailyTarot();
+    // Get daily tarot (personalized per user)
+    const tarot = getDailyTarot(new Date(), session.user.id);
 
-    // Get business timing recommendations
+    // Get business timing recommendations (personalized per user)
     const universalDayNumber = calculateUniversalDayNumber();
     const businessRecommendations = getTodayBusinessRecommendations(
       session.user.lifePathNumber,
-      universalDayNumber
+      universalDayNumber,
+      session.user.id
     );
 
     return NextResponse.json({
