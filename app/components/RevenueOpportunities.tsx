@@ -144,10 +144,9 @@ export default function RevenueOpportunities({ userId }: { userId: string }) {
 
   const totalValue = opportunities.reduce((sum, opp) => {
     const value = typeof opp.estimated_value === 'string' 
-      ? parseFloat(opp.estimated_value) 
-      : opp.estimated_value;
-    const numValue = isNaN(value) ? 0 : Number(value);
-    return Number(sum) + numValue;
+      ? parseFloat(opp.estimated_value) || 0
+      : opp.estimated_value || 0;
+    return sum + value;
   }, 0);
 
   return (
