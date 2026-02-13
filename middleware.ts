@@ -5,7 +5,7 @@ export default auth((req) => {
   const { pathname } = req.nextUrl;
 
   // Public routes that don't require authentication
-  const publicRoutes = ["/login", "/register", "/api/auth", "/api/register"];
+  const publicRoutes = ["/login", "/register", "/api/auth", "/api/register", "/api/intelligence/diagnose", "/api/intelligence/test", "/api/intelligence/models"];
   
   // Onboarding routes (authenticated but allowed even if onboarding incomplete)
   const onboardingRoutes = ["/onboarding", "/api/onboarding"];
