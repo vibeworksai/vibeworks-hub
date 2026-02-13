@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import CreateTaskModal from "../components/CreateTaskModal";
+import TaskDetailModal from "../components/TaskDetailModal";
 
 type Task = {
   id: string;
@@ -52,6 +53,8 @@ export default function TasksPage() {
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState<string>("all");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
   const fetchTasks = async () => {
     try {
@@ -206,12 +209,19 @@ export default function TasksPage() {
                 key={task.id}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="glass-card border border-white/10 p-5 transition-all hover:border-cyan-300/30"
+                onClick={() => {
+                  setSelectedTask(task);
+                  setIsDetailModalOpen(true);
+                }}
+                className="glass-card border border-white/10 p-5 transition-all hover:border-cyan-300/30 cursor-pointer"
               >
                 <div className="flex items-start gap-4">
                   {/* Checkbox */}
                   <button
-                    onClick={() => toggleTask(task.id, task.status)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleTask(task.id, task.status);
+                    }}
                     className="mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded border-2 border-slate-400 transition-colors hover:border-cyan-300"
                   >
                     {task.status === "completed" && (
@@ -286,13 +296,6 @@ export default function TasksPage() {
           )}
         </section>
 
-        {/* Coming Soon */}
-        <div className="mt-8 glass-card border border-white/10 p-6 text-center">
-          <p className="text-sm font-medium text-cyan-200">🚀 Coming Soon</p>
-          <p className="mt-2 text-xs text-slate-400">
-            Task detail view • Subtasks • Notes • Drag & drop • Filters by context/project/deal
-          </p>
-        </div>
       </div>
 
       {/* Create Task Modal */}
@@ -300,6 +303,18 @@ export default function TasksPage() {
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
         onTaskCreated={fetchTasks}
+      />
+
+      {/* Task Detail Modal */}
+      <TaskDetailModal
+        task={selectedTask}
+        isOpen={isDetailModalOpen}
+        onClose={() => {
+          setIsDetailModalOpen(false);
+          setSelectedTask(null);
+        }}
+        onTaskUpdated={fetchTasks}
+        onTaskDeleted={fetchTasks}
       />
     </main>
   );
