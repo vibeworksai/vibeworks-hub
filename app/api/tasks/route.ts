@@ -21,69 +21,37 @@ export async function GET(request: Request) {
     const nextActions = searchParams.get("next_actions") === "true";
     const today = searchParams.get("today") === "true";
 
-    // Build query dynamically based on filters
-    let query = `
+    // Build query with filters
+    const tasks = await sql`
       SELECT * FROM tasks 
-      WHERE user_id = $1
+      WHERE user_id = ${session.user.id}
+        ${status ? sql`AND status = ${status}` : sql``}
+        ${context ? sql`AND context = ${context}` : sql``}
+        ${projectId ? sql`AND project_id = ${projectId}` : sql``}
+        ${dealId ? sql`AND deal_id = ${dealId}` : sql``}
+        ${nextActions ? sql`AND next_action = true` : sql``}
+        ${today ? sql`AND (
+          (due_date IS NOT NULL AND DATE(due_date) = CURRENT_DATE)
+          OR (scheduled_date IS NOT NULL AND DATE(scheduled_date) = CURRENT_DATE)
+          OR (status = 'next_actions' AND due_date IS NULL)
+        )` : sql``}
+      ORDER BY 
+        CASE 
+          WHEN status = 'next_actions' THEN 1
+          WHEN status = 'inbox' THEN 2
+          WHEN status = 'waiting' THEN 3
+          WHEN status = 'someday' THEN 4
+          ELSE 5
+        END,
+        CASE priority
+          WHEN 'critical' THEN 1
+          WHEN 'high' THEN 2
+          WHEN 'medium' THEN 3
+          WHEN 'low' THEN 4
+          ELSE 5
+        END,
+        created_at DESC
     `;
-    const params: any[] = [session.user.id];
-    let paramIndex = 2;
-
-    if (status) {
-      query += ` AND status = $${paramIndex}`;
-      params.push(status);
-      paramIndex++;
-    }
-
-    if (context) {
-      query += ` AND context = $${paramIndex}`;
-      params.push(context);
-      paramIndex++;
-    }
-
-    if (projectId) {
-      query += ` AND project_id = $${paramIndex}`;
-      params.push(projectId);
-      paramIndex++;
-    }
-
-    if (dealId) {
-      query += ` AND deal_id = $${paramIndex}`;
-      params.push(dealId);
-      paramIndex++;
-    }
-
-    if (nextActions) {
-      query += ` AND next_action = true`;
-    }
-
-    if (today) {
-      query += ` AND (
-        (due_date IS NOT NULL AND DATE(due_date) = CURRENT_DATE)
-        OR (scheduled_date IS NOT NULL AND DATE(scheduled_date) = CURRENT_DATE)
-        OR (status = 'next_actions' AND due_date IS NULL)
-      )`;
-    }
-
-    query += ` ORDER BY 
-      CASE 
-        WHEN status = 'next_actions' THEN 1
-        WHEN status = 'inbox' THEN 2
-        WHEN status = 'waiting' THEN 3
-        WHEN status = 'someday' THEN 4
-        ELSE 5
-      END,
-      CASE priority
-        WHEN 'critical' THEN 1
-        WHEN 'high' THEN 2
-        WHEN 'medium' THEN 3
-        WHEN 'low' THEN 4
-        ELSE 5
-      END,
-      created_at DESC
-    `;
-
-    const tasks = await sql.unsafe(query, params);
 
     // Parse numeric fields
     const parsedTasks = tasks.map((task: any) => ({
@@ -215,60 +183,32 @@ export async function PATCH(request: Request) {
       );
     }
 
-    // Build update query dynamically
-    const updateFields: string[] = [];
-    const params: any[] = [id, session.user.id];
-    let paramIndex = 3;
-
-    const allowedFields = [
-      "title",
-      "description",
-      "context",
-      "project_id",
-      "deal_id",
-      "next_action",
-      "status",
-      "priority",
-      "energy_level",
-      "time_estimate",
-      "due_date",
-      "scheduled_date",
-      "completed_at",
-      "tags",
-    ];
-
-    for (const field of allowedFields) {
-      if (updates[field] !== undefined) {
-        updateFields.push(`${field} = $${paramIndex}`);
-        params.push(updates[field]);
-        paramIndex++;
-      }
-    }
-
     // Auto-set completed_at if status changed to completed
     if (updates.status === "completed" && !updates.completed_at) {
-      updateFields.push(`completed_at = NOW()`);
+      updates.completed_at = new Date().toISOString();
     }
 
-    // Always update updated_at
-    updateFields.push(`updated_at = NOW()`);
-
-    if (updateFields.length === 1) {
-      // Only updated_at, nothing to update
-      return NextResponse.json(
-        { error: "No fields to update" },
-        { status: 400 }
-      );
-    }
-
-    const query = `
+    const result = await sql`
       UPDATE tasks 
-      SET ${updateFields.join(", ")}
-      WHERE id = $1 AND user_id = $2
+      SET 
+        title = COALESCE(${updates.title}, title),
+        description = COALESCE(${updates.description}, description),
+        context = COALESCE(${updates.context}, context),
+        project_id = COALESCE(${updates.project_id}, project_id),
+        deal_id = COALESCE(${updates.deal_id}, deal_id),
+        next_action = COALESCE(${updates.next_action}, next_action),
+        status = COALESCE(${updates.status}, status),
+        priority = COALESCE(${updates.priority}, priority),
+        energy_level = COALESCE(${updates.energy_level}, energy_level),
+        time_estimate = COALESCE(${updates.time_estimate}, time_estimate),
+        due_date = COALESCE(${updates.due_date}, due_date),
+        scheduled_date = COALESCE(${updates.scheduled_date}, scheduled_date),
+        completed_at = COALESCE(${updates.completed_at}, completed_at),
+        tags = COALESCE(${updates.tags}, tags),
+        updated_at = NOW()
+      WHERE id = ${id} AND user_id = ${session.user.id}
       RETURNING *
     `;
-
-    const result = await sql.unsafe(query, params);
 
     if (result.length === 0) {
       return NextResponse.json(
