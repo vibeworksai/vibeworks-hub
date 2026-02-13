@@ -9,6 +9,7 @@ import { TodaysFocus } from "./components/TodaysFocus";
 import RevenueOpportunities from "./components/RevenueOpportunities";
 import IdealCustomerProfile from "./components/IdealCustomerProfile";
 import RiskMap from "./components/RiskMap";
+import { getGreeting, getGreetingSubtitle } from "@/lib/greeting";
 
 type ProjectStatus = "On Track" | "Caution" | "At Risk";
 
@@ -85,13 +86,18 @@ export default function HomePage() {
       <div className="mx-auto w-full max-w-7xl">
         <header className="glass-panel border-white/20 px-5 py-6 sm:px-8 sm:py-7">
           <p className="text-xs font-medium uppercase tracking-[0.24em] text-cyan-200/90">
-            Active Project Dashboard
+            {new Date().toLocaleDateString('en-US', { 
+              weekday: 'long',
+              month: 'long',
+              day: 'numeric',
+              timeZone: 'America/New_York'
+            })}
           </p>
           <h1 className="mt-3 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
-            VibeWorks Hub
+            {session?.user?.name ? getGreeting(session.user.name.split(' ')[0]) : 'Welcome back'}
           </h1>
           <p className="mt-3 max-w-2xl text-sm text-slate-300 sm:text-base">
-            Real-time portfolio view with execution momentum, delivery risk, and system health.
+            {getGreetingSubtitle()}
           </p>
 
           {/* Quick Stats */}
