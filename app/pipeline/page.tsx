@@ -190,17 +190,17 @@ export default function PipelinePage() {
           <div className="mt-4 grid grid-cols-3 gap-2 sm:gap-3">
             <div className="glass-card rounded-xl border border-white/10 px-3 py-3">
               <p className="text-[10px] uppercase tracking-[0.14em] text-slate-400">Deals</p>
-              <p className="mt-1 text-base font-semibold text-white sm:text-lg">{summary.totalDeals}</p>
+              <p className="mt-1 truncate text-base font-semibold text-white sm:text-lg">{summary.totalDeals}</p>
             </div>
             <div className="glass-card rounded-xl border border-white/10 px-3 py-3">
               <p className="text-[10px] uppercase tracking-[0.14em] text-slate-400">Value</p>
-              <p className="mt-1 text-base font-semibold text-white sm:text-lg">
+              <p className="mt-1 truncate text-base font-semibold text-white sm:text-lg">
                 {summary.totalValue > 0 ? formatCurrency(summary.totalValue, true) : "$0"}
               </p>
             </div>
             <div className="glass-card rounded-xl border border-white/10 px-3 py-3">
               <p className="text-[10px] uppercase tracking-[0.14em] text-slate-400">Win Rate</p>
-              <p className="mt-1 text-base font-semibold text-white sm:text-lg">
+              <p className="mt-1 truncate text-base font-semibold text-white sm:text-lg">
                 {summary.winRate.toFixed(0)}%
               </p>
             </div>
@@ -235,7 +235,7 @@ export default function PipelinePage() {
                           {stageDeals.length}
                         </span>
                       </div>
-                      <p className="mt-1 text-sm text-slate-300">
+                      <p className="mt-1 truncate text-sm text-slate-300">
                         {stageValue > 0 ? formatCurrency(stageValue, true) : "$0"}
                       </p>
                     </div>
