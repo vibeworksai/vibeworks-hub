@@ -124,9 +124,18 @@ export default function RiskMap({ userId }: { userId: string }) {
     );
   }
 
-  const criticalRisks = risks.filter(r => r.risk_score >= 50);
-  const highRisks = risks.filter(r => r.risk_score >= 25 && r.risk_score < 50);
-  const mediumRisks = risks.filter(r => r.risk_score >= 10 && r.risk_score < 25);
+  const criticalRisks = risks.filter(r => {
+    const score = typeof r.risk_score === 'string' ? parseFloat(r.risk_score) : r.risk_score;
+    return score >= 50;
+  });
+  const highRisks = risks.filter(r => {
+    const score = typeof r.risk_score === 'string' ? parseFloat(r.risk_score) : r.risk_score;
+    return score >= 25 && score < 50;
+  });
+  const mediumRisks = risks.filter(r => {
+    const score = typeof r.risk_score === 'string' ? parseFloat(r.risk_score) : r.risk_score;
+    return score >= 10 && score < 25;
+  });
 
   return (
     <div>
