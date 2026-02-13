@@ -21,7 +21,7 @@ export async function callGPT4(systemPrompt: string, userPrompt: string): Promis
   }
 
   const completion = await openai.chat.completions.create({
-    model: "gpt-4o-mini",
+    model: "gpt-3.5-turbo",
     messages: [
       { role: "system", content: systemPrompt },
       { role: "user", content: userPrompt }
@@ -42,7 +42,7 @@ export async function callGPT4JSON<T>(systemPrompt: string, userPrompt: string):
   }
 
   const completion = await openai.chat.completions.create({
-    model: "gpt-4o-mini",
+    model: "gpt-3.5-turbo-1106",
     messages: [
       { role: "system", content: systemPrompt + "\n\nRespond with valid JSON only." },
       { role: "user", content: userPrompt }
