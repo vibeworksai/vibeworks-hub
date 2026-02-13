@@ -3,12 +3,13 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
+import { motion } from "framer-motion";
 import { MysticalCommandCenter } from "./components/MysticalCommandCenter";
 import { EnhancedMysticalInsights } from "./components/EnhancedMysticalInsights";
-import { TodaysFocus } from "./components/TodaysFocus";
-import RevenueOpportunities from "./components/RevenueOpportunities";
-import IdealCustomerProfile from "./components/IdealCustomerProfile";
-import RiskMap from "./components/RiskMap";
+import TodaysFocusCompact from "./components/TodaysFocusCompact";
+import CriticalAlerts from "./components/CriticalAlerts";
+import IntelligenceTabs from "./components/IntelligenceTabs";
+import CreateTaskModal from "./components/CreateTaskModal";
 import { getGreeting, getGreetingSubtitle } from "@/lib/greeting";
 
 type ProjectStatus = "On Track" | "Caution" | "At Risk";
@@ -55,6 +56,8 @@ export default function HomePage() {
   const { data: session } = useSession();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isCreateTaskModalOpen, setIsCreateTaskModalOpen] = useState(false);
+  const [isMysticalExpanded, setIsMysticalExpanded] = useState(false);
 
   const fetchProjects = async () => {
     try {
@@ -82,125 +85,176 @@ export default function HomePage() {
     : 0;
 
   return (
-    <main className="min-h-screen px-4 pb-8 pt-6 text-slate-100 sm:px-6 sm:pt-10 lg:px-10">
+    <main className="min-h-screen px-4 pb-24 pt-6 text-slate-100 sm:px-6 sm:pt-10 lg:px-10">
       <div className="mx-auto w-full max-w-7xl">
-        <header className="glass-panel border-white/20 px-5 py-6 sm:px-8 sm:py-7">
-          <p className="text-xs font-medium uppercase tracking-[0.24em] text-cyan-200/90">
-            {new Date().toLocaleDateString('en-US', { 
-              weekday: 'long',
-              month: 'long',
-              day: 'numeric',
-              timeZone: 'America/New_York'
-            })}
-          </p>
-          <h1 className="mt-3 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
-            {session?.user?.name ? getGreeting(session.user.name.split(' ')[0]) : 'Welcome back'}
-          </h1>
-          <p className="mt-3 max-w-2xl text-sm text-slate-300 sm:text-base">
-            {getGreetingSubtitle()}
-          </p>
-
-          {/* Quick Stats */}
-          <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
-            <div className="rounded-xl border border-white/10 bg-white/5 p-4">
-              <p className="text-xs text-slate-400">Active Projects</p>
-              <p className="mt-1 text-2xl font-semibold text-white">{projects.length}</p>
-            </div>
-            <div className="rounded-xl border border-white/10 bg-white/5 p-4">
-              <p className="text-xs text-slate-400">On Track</p>
-              <p className="mt-1 text-2xl font-semibold text-emerald-300">
-                {onTrackCount}
+        {/* 1. COMPACT HEADER */}
+        <header className="glass-panel border-white/20 px-5 py-4 sm:px-8 sm:py-5">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex-1">
+              <p className="text-xs font-medium uppercase tracking-[0.24em] text-cyan-200/90">
+                {new Date().toLocaleDateString('en-US', { 
+                  weekday: 'long',
+                  month: 'long',
+                  day: 'numeric',
+                  timeZone: 'America/New_York'
+                })}
+              </p>
+              <h1 className="mt-2 text-2xl font-semibold tracking-tight text-white sm:text-3xl">
+                {session?.user?.name ? getGreeting(session.user.name.split(' ')[0]) : 'Welcome back'}
+              </h1>
+              <p className="mt-1 text-sm text-slate-400">
+                {getGreetingSubtitle()}
               </p>
             </div>
-            <div className="rounded-xl border border-white/10 bg-white/5 p-4">
-              <p className="text-xs text-slate-400">Pipeline Value</p>
-              <p className="mt-1 text-2xl font-semibold text-cyan-300">$36K+</p>
-            </div>
-            <div className="rounded-xl border border-white/10 bg-white/5 p-4">
-              <p className="text-xs text-slate-400">Avg Progress</p>
-              <p className="mt-1 text-2xl font-semibold text-white">{avgProgress}%</p>
-            </div>
+          </div>
+
+          {/* Quick Action Buttons */}
+          <div className="mt-4 flex gap-2">
+            <button
+              onClick={() => setIsCreateTaskModalOpen(true)}
+              className="flex-1 rounded-lg bg-cyan-400/20 px-4 py-2 text-sm font-semibold text-cyan-200 transition-all hover:bg-cyan-400/30"
+            >
+              + Task
+            </button>
+            <Link
+              href="/pipeline"
+              className="flex-1 rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-center text-sm font-medium text-slate-300 transition-colors hover:bg-white/10"
+            >
+              Pipeline →
+            </Link>
           </div>
         </header>
 
-        {/* Mystical Command Center - Personalized Dashboard */}
         {session?.user && (
           <>
-            <div className="mt-6 sm:mt-7">
-              <MysticalCommandCenter />
+            {/* 2. TODAY'S FOCUS - TOP PRIORITY */}
+            <div className="mt-4 sm:mt-5">
+              <TodaysFocusCompact onCreateTask={() => setIsCreateTaskModalOpen(true)} />
             </div>
-            
-            {/* Enhanced Mystical Insights - Moon, Tarot, Business Timing */}
-            <div className="mt-6 sm:mt-7">
-              <EnhancedMysticalInsights />
+
+            {/* 3. CRITICAL ALERTS */}
+            <div className="mt-4 sm:mt-5">
+              <CriticalAlerts userId={session.user.id || "1"} />
             </div>
-            
-            {/* Strategic Intelligence Layer - AI-Powered Business Insights */}
-            <div className="mt-6 sm:mt-7">
-              <h2 className="text-2xl font-semibold mb-4 px-1">
-                🧠 Strategic Intelligence
-              </h2>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <RevenueOpportunities userId={session.user.id || "1"} />
-                <IdealCustomerProfile userId={session.user.id || "1"} />
+
+            {/* 4. QUICK STATS */}
+            <div className="mt-4 sm:mt-5">
+              <div className="glass-card p-4">
+                <h3 className="mb-3 text-sm font-semibold text-slate-300">Quick Stats</h3>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="rounded-lg border border-white/10 bg-white/5 p-3">
+                    <p className="text-xs text-slate-400">Pipeline Value</p>
+                    <p className="mt-1 text-xl font-bold text-cyan-300">$36K</p>
+                  </div>
+                  <div className="rounded-lg border border-white/10 bg-white/5 p-3">
+                    <p className="text-xs text-slate-400">Active Projects</p>
+                    <p className="mt-1 text-xl font-bold text-white">{projects.length}</p>
+                  </div>
+                  <div className="rounded-lg border border-white/10 bg-white/5 p-3">
+                    <p className="text-xs text-slate-400">On Track</p>
+                    <p className="mt-1 text-xl font-bold text-emerald-300">{onTrackCount}</p>
+                  </div>
+                  <div className="rounded-lg border border-white/10 bg-white/5 p-3">
+                    <p className="text-xs text-slate-400">Avg Progress</p>
+                    <p className="mt-1 text-xl font-bold text-white">{avgProgress}%</p>
+                  </div>
+                </div>
               </div>
-              <div className="mt-6">
-                <RiskMap userId={session.user.id || "1"} />
+            </div>
+
+            {/* 5. MYSTICAL TIMING - COLLAPSIBLE */}
+            <div className="mt-4 sm:mt-5">
+              <div className="glass-card p-4">
+                <button
+                  onClick={() => setIsMysticalExpanded(!isMysticalExpanded)}
+                  className="w-full flex items-center justify-between"
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="text-xl">🌙</span>
+                    <h2 className="text-lg font-semibold">Today's Energy</h2>
+                  </div>
+                  <motion.div
+                    animate={{ rotate: isMysticalExpanded ? 180 : 0 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <svg className="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </motion.div>
+                </button>
+
+                {isMysticalExpanded && (
+                  <div className="mt-4 space-y-4">
+                    <MysticalCommandCenter />
+                    <EnhancedMysticalInsights />
+                  </div>
+                )}
               </div>
             </div>
-            
-            {/* Today's Focus - GTD Task Management */}
-            <div className="mt-6 sm:mt-7">
-              <TodaysFocus />
+
+            {/* 6. INTELLIGENCE LAYER - TABBED */}
+            <div className="mt-4 sm:mt-5">
+              <IntelligenceTabs userId={session.user.id || "1"} />
             </div>
           </>
         )}
 
+        {/* 7. PROJECTS - BOTTOM */}
         {loading ? (
           <div className="mt-6 text-center text-slate-400">Loading projects...</div>
         ) : projects.length === 0 ? (
           <div className="mt-6 text-center text-slate-400">No projects yet</div>
         ) : (
-          <section className="mt-6 grid grid-cols-1 gap-4 sm:mt-7 sm:gap-5 lg:grid-cols-2 xl:grid-cols-3">
-            {projects.map((project) => (
-              <Link key={project.id} href={`/p/${project.id}`}>
-                <article className="glass-card relative overflow-hidden p-5 transition-transform duration-300 hover:-translate-y-0.5 sm:p-6 cursor-pointer">
-                  <div className="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-cyan-300/10 blur-2xl" />
-                  <div className="relative z-10">
-                    <div className="flex items-start justify-between gap-3">
-                      <h2 className="text-lg font-semibold tracking-tight text-white">
-                        {project.name}
-                      </h2>
-                      <span
-                        className={`shrink-0 rounded-full border px-2.5 py-1 text-xs font-medium ${statusStyles[project.status]}`}
-                      >
-                        {project.status}
-                      </span>
-                    </div>
-
-                    <div className="mt-5">
-                      <div className="mb-2 flex items-center justify-between text-xs text-slate-300">
-                        <span>Progress</span>
-                        <span>{project.progress}%</span>
+          <section className="mt-4 sm:mt-5">
+            <div className="glass-card p-4">
+              <h3 className="mb-3 text-lg font-semibold">Projects ({projects.length})</h3>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {projects.map((project) => (
+                  <Link key={project.id} href={`/p/${project.id}`}>
+                    <article className="relative overflow-hidden rounded-lg border border-white/10 bg-white/5 p-4 transition-all hover:border-cyan-400/30 cursor-pointer">
+                      <div className="flex items-start justify-between gap-2 mb-3">
+                        <h3 className="text-sm font-semibold text-white flex-1">
+                          {project.name}
+                        </h3>
+                        <span
+                          className={`shrink-0 rounded-full border px-2 py-0.5 text-xs font-medium ${statusStyles[project.status]}`}
+                        >
+                          {project.status}
+                        </span>
                       </div>
-                      <div className="h-2.5 overflow-hidden rounded-full bg-white/10 ring-1 ring-white/15">
+
+                      <div className="mb-2 flex items-center justify-between text-xs text-slate-400">
+                        <span>Progress</span>
+                        <span className="font-medium text-white">{project.progress}%</span>
+                      </div>
+                      <div className="h-2 overflow-hidden rounded-full bg-white/10">
                         <div
                           className={`h-full rounded-full bg-gradient-to-r ${progressStyles[project.status]}`}
                           style={{ width: `${project.progress}%` }}
                         />
                       </div>
-                    </div>
 
-                    <p className="mt-5 text-xs text-slate-300">
-                      Last updated {getTimeAgo(project.updated_at)}
-                    </p>
-                  </div>
-                </article>
-              </Link>
-            ))}
+                      <p className="mt-3 text-xs text-slate-400">
+                        {getTimeAgo(project.updated_at)}
+                      </p>
+                    </article>
+                  </Link>
+                ))}
+              </div>
+            </div>
           </section>
         )}
       </div>
+
+      {/* Create Task Modal */}
+      <CreateTaskModal
+        isOpen={isCreateTaskModalOpen}
+        onClose={() => setIsCreateTaskModalOpen(false)}
+        onTaskCreated={() => {
+          setIsCreateTaskModalOpen(false);
+          // Could refresh tasks here if needed
+        }}
+      />
     </main>
   );
 }
