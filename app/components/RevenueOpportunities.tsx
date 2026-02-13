@@ -146,7 +146,8 @@ export default function RevenueOpportunities({ userId }: { userId: string }) {
     const value = typeof opp.estimated_value === 'string' 
       ? parseFloat(opp.estimated_value) 
       : opp.estimated_value;
-    return sum + (isNaN(value) ? 0 : value);
+    const numValue = isNaN(value) ? 0 : Number(value);
+    return Number(sum) + numValue;
   }, 0);
 
   return (
