@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { MysticalCommandCenter } from "./components/MysticalCommandCenter";
 import { EnhancedMysticalInsights } from "./components/EnhancedMysticalInsights";
+import { TodaysFocus } from "./components/TodaysFocus";
 
 type ProjectStatus = "On Track" | "Caution" | "At Risk";
 
@@ -123,6 +124,11 @@ export default function HomePage() {
             {/* Enhanced Mystical Insights - Moon, Tarot, Business Timing */}
             <div className="mt-6 sm:mt-7">
               <EnhancedMysticalInsights />
+            </div>
+            
+            {/* Today's Focus - GTD Task Management */}
+            <div className="mt-6 sm:mt-7">
+              <TodaysFocus />
             </div>
           </>
         )}
