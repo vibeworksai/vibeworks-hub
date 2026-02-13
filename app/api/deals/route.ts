@@ -35,7 +35,13 @@ export async function GET() {
       SELECT * FROM deals ORDER BY created_at DESC
     `;
     
-    return NextResponse.json({ deals });
+    // Parse numeric values to numbers (Neon returns them as strings)
+    const parsedDeals = deals.map(deal => ({
+      ...deal,
+      value: deal.value ? Number(deal.value) : null
+    }));
+    
+    return NextResponse.json({ deals: parsedDeals });
   } catch (error) {
     console.error("Database error:", error);
     return NextResponse.json({ deals: mockDeals });
