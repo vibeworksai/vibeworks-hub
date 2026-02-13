@@ -145,23 +145,17 @@ export default function IdealCustomerProfile({ userId }: { userId: string }) {
   }
 
   return (
-    <div className="glass-card p-6">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <div className="text-2xl">🎯</div>
-          <div>
-            <h2 className="text-xl font-semibold">Ideal Customer Profile</h2>
-            <p className="text-sm text-gray-400">
-              v{profile.profile_version} • Generated from your best customers
-            </p>
-          </div>
-        </div>
+    <div>
+      <div className="flex items-center justify-between mb-4">
+        <p className="text-sm text-gray-400">
+          v{profile.profile_version} • Generated from your best customers
+        </p>
         <button
           onClick={runAnalysis}
           disabled={analyzing}
-          className="px-4 py-2 bg-cyan-500/20 hover:bg-cyan-500/30 rounded-lg text-cyan-400 transition-colors disabled:opacity-50"
+          className="px-3 py-1.5 bg-cyan-500/20 hover:bg-cyan-500/30 rounded-lg text-cyan-400 text-sm transition-colors disabled:opacity-50"
         >
-          {analyzing ? "Updating..." : "Update Profile"}
+          {analyzing ? "Updating..." : "Update"}
         </button>
       </div>
 

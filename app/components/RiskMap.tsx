@@ -129,21 +129,15 @@ export default function RiskMap({ userId }: { userId: string }) {
   const mediumRisks = risks.filter(r => r.risk_score >= 10 && r.risk_score < 25);
 
   return (
-    <div className="glass-card p-6">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <div className="text-2xl">🗺️</div>
-          <div>
-            <h2 className="text-xl font-semibold">Risk Map</h2>
-            <p className="text-sm text-gray-400">AI-powered risk identification</p>
-          </div>
-        </div>
+    <div>
+      <div className="flex items-center justify-between mb-4">
+        <p className="text-sm text-gray-400">AI-powered risk identification</p>
         <button
           onClick={runAnalysis}
           disabled={analyzing}
-          className="px-4 py-2 bg-cyan-500/20 hover:bg-cyan-500/30 rounded-lg text-cyan-400 transition-colors disabled:opacity-50"
+          className="px-3 py-1.5 bg-cyan-500/20 hover:bg-cyan-500/30 rounded-lg text-cyan-400 text-sm transition-colors disabled:opacity-50"
         >
-          {analyzing ? "Analyzing..." : "Refresh Analysis"}
+          {analyzing ? "Analyzing..." : "Refresh"}
         </button>
       </div>
 
