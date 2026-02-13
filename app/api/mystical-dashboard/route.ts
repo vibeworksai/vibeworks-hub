@@ -26,7 +26,9 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+    // Get today's date in Eastern Time (where Ivan is based)
+    const etDate = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/New_York' }));
+    const today = etDate.toISOString().split("T")[0]; // YYYY-MM-DD in ET
 
     // Check if we have cached advice for today
     if (sql) {

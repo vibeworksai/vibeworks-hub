@@ -158,11 +158,17 @@ export function getSunSign(birthDate: Date): string {
 
 /**
  * Calculate Universal Day Number from today's date
+ * Uses Eastern Time (America/New_York) as reference timezone
  */
-export function calculateUniversalDayNumber(date: Date = new Date()): number {
-  const month = date.getMonth() + 1;
-  const day = date.getDate();
-  const year = date.getFullYear();
+export function calculateUniversalDayNumber(date?: Date): number {
+  // Get current date in Eastern Time
+  const etDate = date 
+    ? new Date(date.toLocaleString('en-US', { timeZone: 'America/New_York' }))
+    : new Date(new Date().toLocaleString('en-US', { timeZone: 'America/New_York' }));
+  
+  const month = etDate.getMonth() + 1;
+  const day = etDate.getDate();
+  const year = etDate.getFullYear();
   
   // Sum all digits
   let sum = 0;
