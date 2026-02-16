@@ -5,7 +5,7 @@ export default auth((req) => {
   const { pathname } = req.nextUrl;
 
   // Public routes that don't require authentication
-  const publicRoutes = ["/login", "/register", "/api/auth", "/api/register", "/api/intelligence/diagnose", "/api/intelligence/test", "/api/intelligence/models"];
+  const publicRoutes = ["/login", "/register", "/api/auth", "/api/register", "/api/intelligence/diagnose", "/api/intelligence/test", "/api/intelligence/models", "/api/cron"];
   
   // Onboarding routes (authenticated but allowed even if onboarding incomplete)
   const onboardingRoutes = ["/onboarding", "/api/onboarding"];
@@ -13,6 +13,15 @@ export default auth((req) => {
   // Check if current path is public or onboarding
   const isPublicRoute = publicRoutes.some((route) => pathname.startsWith(route));
   const isOnboardingRoute = onboardingRoutes.some((route) => pathname.startsWith(route));
+  
+  // Allow cron-triggered intelligence endpoints (with valid secret)
+  const CRON_SECRET = process.env.CRON_SECRET || "dev-secret-12345";
+  const cronSecret = req.headers.get("x-cron-secret");
+  const isCronRequest = pathname.startsWith("/api/intelligence") && cronSecret === CRON_SECRET;
+  
+  if (isCronRequest) {
+    return NextResponse.next();
+  }
 
   if (!req.auth && !isPublicRoute) {
     // Redirect to login if not authenticated
