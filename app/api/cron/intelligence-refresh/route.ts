@@ -53,6 +53,8 @@ export async function POST(request: Request) {
     results.users_processed = users.length;
     console.log(`[Cron] Processing ${users.length} users...`);
     
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || process.env.NEXTAUTH_URL || `https://${process.env.VERCEL_URL}` || 'http://localhost:3000';
+    
     // Process each user
     for (const user of users) {
       const userId = user.user_id;
@@ -60,7 +62,6 @@ export async function POST(request: Request) {
       
       // 1. Revenue Catalyst Analysis
       try {
-        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || process.env.NEXTAUTH_URL || `https://${process.env.VERCEL_URL}` || 'http://localhost:3000';
         const revResponse = await fetch(
           `${baseUrl}/api/intelligence/revenue-catalyst?user_id=${userId}&analyze=true`,
           { method: "GET", headers: { "x-cron-secret": CRON_SECRET } }
