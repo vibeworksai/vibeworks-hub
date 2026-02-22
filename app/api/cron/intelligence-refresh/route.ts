@@ -43,14 +43,10 @@ export async function POST(request: Request) {
   };
   
   try {
-    // Fetch all active users (users with at least one deal or contact)
+    // Fetch all active users from the users table
     const users = await sql`
-      SELECT DISTINCT user_id 
-      FROM (
-        SELECT user_id FROM deals
-        UNION
-        SELECT user_id FROM contacts
-      ) AS all_users
+      SELECT id AS user_id FROM users
+      WHERE onboarding_complete = true
       LIMIT 50
     `;
     
@@ -64,8 +60,9 @@ export async function POST(request: Request) {
       
       // 1. Revenue Catalyst Analysis
       try {
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || process.env.NEXTAUTH_URL || `https://${process.env.VERCEL_URL}` || 'http://localhost:3000';
         const revResponse = await fetch(
-          `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/intelligence/revenue-catalyst?user_id=${userId}&analyze=true`,
+          `${baseUrl}/api/intelligence/revenue-catalyst?user_id=${userId}&analyze=true`,
           { method: "GET", headers: { "x-cron-secret": CRON_SECRET } }
         );
         
@@ -85,7 +82,7 @@ export async function POST(request: Request) {
       // 2. Client Zero-D Analysis
       try {
         const icpResponse = await fetch(
-          `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/intelligence/client-zero-d?user_id=${userId}&analyze=true`,
+          `${baseUrl}/api/intelligence/client-zero-d?user_id=${userId}&analyze=true`,
           { method: "GET", headers: { "x-cron-secret": CRON_SECRET } }
         );
         
@@ -105,7 +102,7 @@ export async function POST(request: Request) {
       // 3. Risk Cartographer Analysis
       try {
         const riskResponse = await fetch(
-          `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/intelligence/risk-cartographer?user_id=${userId}&analyze=true`,
+          `${baseUrl}/api/intelligence/risk-cartographer?user_id=${userId}&analyze=true`,
           { method: "GET", headers: { "x-cron-secret": CRON_SECRET } }
         );
         

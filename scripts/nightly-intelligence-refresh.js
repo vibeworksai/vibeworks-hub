@@ -47,6 +47,12 @@ const USERS = [
   { id: '2ea9500d-8345-4c8d-9a3b-4dd98f31b81a', name: 'Natasha' }
 ];
 
+const CRON_SECRET = process.env.CRON_SECRET || 'dev-secret-12345';
+const headers = {
+  'x-cron-secret': CRON_SECRET,
+  'Content-Type': 'application/json'
+};
+
 async function runAnalysis() {
   console.log('🌙 NIGHTLY INTELLIGENCE REFRESH');
   console.log('='.repeat(60));
@@ -60,7 +66,7 @@ async function runAnalysis() {
     try {
       console.log('\n💰 Revenue Catalyst: Analyzing upsell opportunities...');
       const revenueUrl = `https://app-dir-mu.vercel.app/api/intelligence/revenue-catalyst?user_id=${user.id}&analyze=true`;
-      const revenueRes = await fetch(revenueUrl);
+      const revenueRes = await fetch(revenueUrl, { headers });
       const revenueData = await revenueRes.json();
       
       if (revenueData.error) {
@@ -83,7 +89,7 @@ async function runAnalysis() {
     try {
       console.log('\n🎯 Client Zero-D: Analyzing ICP + lead scoring...');
       const clientUrl = `https://app-dir-mu.vercel.app/api/intelligence/client-zero-d?user_id=${user.id}&analyze=true`;
-      const clientRes = await fetch(clientUrl);
+      const clientRes = await fetch(clientUrl, { headers });
       const clientData = await clientRes.json();
       
       if (clientData.error) {
@@ -109,7 +115,7 @@ async function runAnalysis() {
     try {
       console.log('\n⚠️  Risk Cartographer: Detecting risks...');
       const riskUrl = `https://app-dir-mu.vercel.app/api/intelligence/risk-cartographer?user_id=${user.id}&analyze=true`;
-      const riskRes = await fetch(riskUrl);
+      const riskRes = await fetch(riskUrl, { headers });
       const riskData = await riskRes.json();
       
       if (riskData.error) {
