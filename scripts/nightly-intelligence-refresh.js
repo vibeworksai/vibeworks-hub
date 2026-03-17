@@ -95,8 +95,12 @@ async function runAnalysis() {
       if (clientData.error) {
         console.log(`   ⚠️  Error: ${clientData.error}`);
       } else {
-        if (clientData.icp) {
-          console.log(`   ✅ ICP Profile: ${clientData.icp.industry || 'N/A'}`);
+        // Support both response shapes: {profile} and {icp, leads}
+        const profile = clientData.profile || clientData.icp;
+        if (profile) {
+          const industry = profile.attributes?.industry_sector || profile.industry || 'N/A';
+          console.log(`   ✅ ICP Profile: ${industry}`);
+          console.log(`   📊 Version: ${clientData.version || profile.profile_version || 'N/A'}`);
         }
         if (clientData.leads) {
           console.log(`   ✅ Scored ${clientData.leads.length} leads`);
@@ -105,6 +109,9 @@ async function runAnalysis() {
             return score >= 80;
           });
           console.log(`   🔥 Hot leads (80+): ${hot.length}`);
+        }
+        if (!profile && !clientData.leads) {
+          console.log(`   ✅ Analysis complete (raw keys: ${Object.keys(clientData).join(', ')})`);
         }
       }
     } catch (err) {

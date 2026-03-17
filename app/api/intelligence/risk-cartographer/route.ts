@@ -112,7 +112,7 @@ export async function GET(request: Request) {
             ) VALUES (
               ${'risk-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9)},
               ${userId}, ${risk.risk_category}, ${risk.risk_title}, ${risk.risk_description},
-              ${risk.entity_type}, ${risk.entity_id}, ${risk.probability}, ${risk.impact}, ${risk.risk_score},
+              ${risk.entity_type}, ${risk.entity_id}, ${Math.round(risk.probability)}, ${Math.round(risk.impact)}, ${Math.round(risk.risk_score)},
               ${risk.mitigation_strategies}, 'pending', NOW(), NOW(), NOW()
             )
           `;
